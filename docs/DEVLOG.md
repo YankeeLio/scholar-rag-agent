@@ -112,4 +112,44 @@
 4. 引用图谱 NetworkX + 前端可视化
 5. 前端增强：版本去重差异提示、证据面板交互完善
 
+---
+
+## Day 4（2026-11-04 续）
+
+### 完成项
+
+| 项 | 结果 | 验证方式 |
+|---|---|---|
+| OCR 通道（官方 v1_img 用例） | ocr.py 基于 RapidOCR（onnxruntime CPU）：检测无文本层 → 按页重建 Document（每页一个 Section）→ 常规切块入库；修复 RapidOCR v6 API（RapidOCROutput.txts）与 Document 结构（lines+sections） | ocr_probe.json：15 页/975 行/3.6 万字符/49s/28 块，标题作者正文引用号全部识别；debug_ocr_upload.json 全链路 ok |
+| embed 一次复用 | upload 流程 embed 一次，去重检查与入库共用向量（教材上传可省一次全量编码） | 教材上传实测 |
+| 引用图谱 | graph.py：库内文档参考文献标题匹配建边；GET /api/graph 返回 nodes/edges；前端新增"引用图谱" tab（ECharts 力导向，CDN 不可用时降级列表） | api_graph_probe（待教材重入后复验） |
+| 教材 541 页入库 | 首传成功：893 块、章节树完整（12 Transformers / 18 Diffusion / 19 RL…）、index_count 920 | api_textbook_upload.json（索引已因故重建，见下） |
+
+### Day 4 重大坑（必须记牢）
+
+**Chroma HNSW 索引损坏 → 920 块向量全部丢失，需重新嵌入（~40 分钟）**。
+现象：健康检查 500，`Error loading hnsw index`；排查发现 collection 目录只剩 index_metadata.pickle，HNSW 数据文件未落盘；sqlite 中 documents/metadatas（9200 行）完好但向量本体在 HNSW 文件中丢失，无法从 sqlite 恢复。
+成因（双重）：
+1. **服务进程被 `Stop-Process -Force` 强杀**，Chroma 后台 compactor 未完成落盘（上传响应返回 ≠ HNSW 已写盘）。
+2. **服务运行时用独立 python 脚本打开同一 data/chroma 持久化目录**（debug_dedup/debug_ocr_upload 等脚本都 VectorIndex()）——并发读写同一 Chroma 目录也是损坏诱因。
+
+铁律（此后必须遵守）：
+- 上传/写入完成 → **等待 ≥30 秒再重启服务**，让 Chroma flush；重启用先杀后启。
+- **服务运行期间绝不**用独立脚本打开 data/chroma（只读也不允许）。
+- 需要调试索引内容时，写脚本停服务后再跑，或只经 HTTP API 访问。
+
+### 待办（依赖选手）
+
+- [ ] 报名缴费（11-18 截止，最紧急）
+- [ ] GitHub Public 仓库建立
+
+### Day 5 计划
+
+1. 教材重入后：教材 RAG 三问验证（自监督/Transformer QKV/扩散模型）+ 图谱接口验证
+2. 块长优化评估（1800→1000，仅测试文档）
+3. 前端：证据面板引用高亮改进、去重替换交互完善
+4. 写作 Copilot 接口（六大模块之一）
+5. 部署文档与 README（评分"工程 10%"）
+
+
 
