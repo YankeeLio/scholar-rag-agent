@@ -1,0 +1,78 @@
+{
+  "v1": {
+    "pages": 15,
+    "title": "Attention Is All You Need",
+    "authors": [
+      "Ashish Vaswani∗",
+      "Noam Shazeer∗",
+      "Niki Parmar∗",
+      "Jakob Uszkoreit∗",
+      "Llion Jones∗",
+      "Aidan N. Gomez∗†",
+      "Łukasz Kaiser∗",
+      "Illia Polosukhin∗"
+    ],
+    "abstract_chars": 1135,
+    "line_count": 1015,
+    "section_count": 9,
+    "sections": [
+      "1 Introduction",
+      "2 Background",
+      "3 Model Architecture",
+      "4 Why Self-Attention",
+      "5 Training",
+      "6 Results",
+      "7 Conclusion",
+      " References",
+      " Attention Visualizations"
+    ],
+    "ref_count": 36,
+    "ref_first": "Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E Hinton. Layer normalization. arXi",
+    "table_count": 4,
+    "tables": [
+      "p5: Maximum path lengths, per-layer complexity and minimum numbe",
+      "p7: The Transformer achieves better BLEU scores than previous st",
+      "p8: Variations on the Transformer architecture. Unlisted hyperpa",
+      "p8: The Transformer generalizes well to English constituency par"
+    ],
+    "parse_secs": 0.33
+  },
+  "v7": {
+    "pages": 15,
+    "title": "Attention Is All You Need",
+    "authors": [
+      "Ashish Vaswani∗",
+      "Noam Shazeer∗",
+      "Niki Parmar∗",
+      "Jakob Uszkoreit∗",
+      "Llion Jones∗",
+      "Aidan N. Gomez∗†",
+      "Łukasz Kaiser∗",
+      "Illia Polosukhin∗‡"
+    ],
+    "abstract_chars": 2218,
+    "line_count": 1048,
+    "section_count": 9,
+    "sections": [
+      "1 Introduction",
+      "2 Background",
+      "3 Model Architecture",
+      "4 Why Self-Attention",
+      "5 Training",
+      "6 Results",
+      "7 Conclusion",
+      " References",
+      " Attention Visualizations"
+    ],
+    "ref_count": 40,
+    "ref_first": "Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E Hinton. Layer normalization. arXi",
+    "table_count": 4,
+    "tables": [
+      "p5: Maximum path lengths, per-layer complexity and minimum numbe",
+      "p7: The Transformer achieves better BLEU scores than previous st",
+      "p8: Variations on the Transformer architecture. Unlisted values ",
+      "p9: The Transformer generalizes well to English constituency par"
+    ],
+    "parse_secs": 0.33
+  }
+}

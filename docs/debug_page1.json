@@ -1,0 +1,218 @@
+{
+  "page1_lines": [
+    {
+      "i": 0,
+      "fs": 17.21540069580078,
+      "text": "Attention Is All You Need"
+    },
+    {
+      "i": 1,
+      "fs": 9.962599754333496,
+      "text": "Ashish Vaswani∗"
+    },
+    {
+      "i": 2,
+      "fs": 9.962599754333496,
+      "text": "Google Brain"
+    },
+    {
+      "i": 3,
+      "fs": 9.962599754333496,
+      "text": "avaswani@google.com"
+    },
+    {
+      "i": 4,
+      "fs": 9.962599754333496,
+      "text": "Noam Shazeer∗"
+    },
+    {
+      "i": 5,
+      "fs": 9.962599754333496,
+      "text": "Google Brain"
+    },
+    {
+      "i": 6,
+      "fs": 9.962599754333496,
+      "text": "noam@google.com"
+    },
+    {
+      "i": 7,
+      "fs": 9.962599754333496,
+      "text": "Niki Parmar∗"
+    },
+    {
+      "i": 8,
+      "fs": 9.962599754333496,
+      "text": "Google Research"
+    },
+    {
+      "i": 9,
+      "fs": 9.962599754333496,
+      "text": "nikip@google.com"
+    },
+    {
+      "i": 10,
+      "fs": 9.962599754333496,
+      "text": "Jakob Uszkoreit∗"
+    },
+    {
+      "i": 11,
+      "fs": 9.962599754333496,
+      "text": "Google Research"
+    },
+    {
+      "i": 12,
+      "fs": 9.962599754333496,
+      "text": "usz@google.com"
+    },
+    {
+      "i": 13,
+      "fs": 9.962599754333496,
+      "text": "Llion Jones∗"
+    },
+    {
+      "i": 14,
+      "fs": 9.962599754333496,
+      "text": "Google Research"
+    },
+    {
+      "i": 15,
+      "fs": 9.962599754333496,
+      "text": "llion@google.com"
+    },
+    {
+      "i": 16,
+      "fs": 9.962599754333496,
+      "text": "Aidan N. Gomez∗†"
+    },
+    {
+      "i": 17,
+      "fs": 9.962599754333496,
+      "text": "University of Toronto"
+    },
+    {
+      "i": 18,
+      "fs": 9.962599754333496,
+      "text": "aidan@cs.toronto.edu"
+    },
+    {
+      "i": 19,
+      "fs": 9.962599754333496,
+      "text": "Łukasz Kaiser∗"
+    },
+    {
+      "i": 20,
+      "fs": 9.962599754333496,
+      "text": "Google Brain"
+    },
+    {
+      "i": 21,
+      "fs": 9.962599754333496,
+      "text": "lukaszkaiser@google.com"
+    },
+    {
+      "i": 22,
+      "fs": 9.962599754333496,
+      "text": "Illia Polosukhin∗"
+    },
+    {
+      "i": 23,
+      "fs": 9.962599754333496,
+      "text": "illia.polosukhin@gmail.com"
+    },
+    {
+      "i": 24,
+      "fs": 11.9552001953125,
+      "text": "Abstract"
+    },
+    {
+      "i": 25,
+      "fs": 10.061732292175293,
+      "text": "The dominant sequence transduction models are based on complex recurrent or"
+    },
+    {
+      "i": 26,
+      "fs": 10.061732292175293,
+      "text": "convolutional neural networks in an encoder-decoder conﬁguration. The best"
+    },
+    {
+      "i": 27,
+      "fs": 10.061732292175293,
+      "text": "performing models also connect the encoder and decoder through an attention"
+    },
+    {
+      "i": 28,
+      "fs": 10.061732292175293,
+      "text": "mechanism. We propose a new simple network architecture, the Transformer,"
+    },
+    {
+      "i": 29,
+      "fs": 9.862470626831055,
+      "text": "based solely on attention mechanisms, dispensing with recurrence and convolutions"
+    },
+    {
+      "i": 30,
+      "fs": 10.061732292175293,
+      "text": "entirely. Experiments on two machine translation tasks show these models to"
+    },
+    {
+      "i": 31,
+      "fs": 10.022196769714355,
+      "text": "be superior in quality while being more parallelizable and requiring signiﬁcantly"
+    },
+    {
+      "i": 32,
+      "fs": 10.061732292175293,
+      "text": "less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-"
+    },
+    {
+      "i": 33,
+      "fs": 10.061732292175293,
+      "text": "to-German translation task, improving over the existing best results, including"
+    },
+    {
+      "i": 34,
+      "fs": 9.862470626831055,
+      "text": "ensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task,"
+    },
+    {
+      "i": 35,
+      "fs": 9.862470626831055,
+      "text": "our model establishes a new single-model state-of-the-art BLEU score of 41.0 after"
+    },
+    {
+      "i": 36,
+      "fs": 10.061732292175293,
+      "text": "training for 3.5 days on eight GPUs, a small fraction of the training costs of the"
+    },
+    {
+      "i": 37,
+      "fs": 9.942654609680176,
+      "text": "best models from the literature. We show that the Transformer generalizes well to"
+    },
+    {
+      "i": 38,
+      "fs": 10.037040710449219,
+      "text": "other tasks by applying it successfully to English constituency parsing both with"
+    },
+    {
+      "i": 39,
+      "fs": 9.962599754333496,
+      "text": "large and limited training data."
+    }
+  ],
+  "abstract_zone": [
+    {
+      "i": 24,
+      "page": 0,
+      "fs": 11.9552001953125,
+      "text": "Abstract"
+    },
+    {
+      "i": 41,
+      "page": 0,
+      "fs": 11.9552001953125,
+      "text": "Introduction"
+    }
+  ]
+}
