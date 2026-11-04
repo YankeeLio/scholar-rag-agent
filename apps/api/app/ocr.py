@@ -54,10 +54,17 @@ class OcrEngine:
             for ln in page_lines:
                 lines.append(Line(page=p, bbox=[0.0, 0.0, 0.0, 0.0], text=ln,
                                   font_size=10.0, font="", ref_ids=[]))
+        # best-effort real title: first non-empty line of page 1
+        title = Path(pdf_path).stem
+        if pages and pages[0]:
+            for ln in pages[0]:
+                if ln.strip() and not ln.startswith("arXiv:"):
+                    title = ln.strip()
+                    break
         return Document(
             source=str(pdf_path),
             pages=len(pages),
-            title=Path(pdf_path).stem,
+            title=title,
             authors=[],
             abstract="",
             lines=lines,

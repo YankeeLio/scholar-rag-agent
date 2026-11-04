@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {
+      "id": "140c25234821",
+      "title": "Understanding Deep Learning",
+      "chunks": 893
+    },
+    {
+      "id": "b891575d9243",
+      "title": "Attention Is All You Need",
+      "chunks": 28
+    }
+  ],
+  "edges": [
+    {
+      "source": "140c25234821",
+      "target": "b891575d9243"
+    }
+  ]
+}

@@ -1,16 +1,14 @@
 """graph.py: citation graph over the documents in the library.
 
-Edges are built when document A's reference list (parsed from its own
-PDF text) matches the title of another document B in the library.
-Titles are normalized (lowercase, punctuation stripped) before matching.
-
-The collection itself only stores per-chunk metadata, so each document
-is re-parsed on demand to recover its reference titles.
+Robust matching strategy: an edge A -> B exists when B's normalized
+title appears anywhere in A's full text (works for both arXiv-style
+numbered references and APA-style bibliographies, e.g. the 541-page
+Understanding Deep Learning textbook). Titles are normalized to
+lowercase alphanumerics before matching.
 """
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from app.indexer import VectorIndex
 from app.parser import PdfParser
@@ -36,27 +34,30 @@ def build_graph(idx: VectorIndex) -> dict:
             }
         docs[did]["chunks"] += 1
 
-    # recover each document's reference titles by re-parsing its source
-    refs_of: dict[str, list[str]] = {}
+    # full normalized text per document (re-parsed from its own source)
+    fulltext: dict[str, str] = {}
     for did, info in docs.items():
         try:
             doc = PdfParser().parse(info["source"])
-            refs_of[did] = [_norm_title(r) for r in doc.references]
+            fulltext[did] = _norm_title(
+                " ".join(l.text for l in doc.lines))
         except Exception:
-            refs_of[did] = []
+            fulltext[did] = ""
 
-    # title index of library docs (skip generic OCR titles)
+    # title index of library docs (skip generic OCR/page titles)
     title_index: dict[str, str] = {}
     for did, info in docs.items():
-        if info["title"].startswith("Page "):
-            continue
-        title_index[_norm_title(info["title"])] = did
+        t = _norm_title(info["title"])
+        if t and not info["title"].startswith("Page "):
+            title_index[t] = did
 
     edges: list[dict] = []
-    for did, refs in refs_of.items():
-        for rt in refs:
-            if rt in title_index and title_index[rt] != did:
-                edges.append({"source": did, "target": title_index[rt]})
+    for did, text in fulltext.items():
+        for t, target in title_index.items():
+            if target == did:
+                continue
+            if f" {t} " in f" {text} " or f" {t}." in f" {text} ":
+                edges.append({"source": did, "target": target})
 
     return {
         "nodes": [

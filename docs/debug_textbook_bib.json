@@ -1,0 +1,40 @@
+{
+  "pages_with_bib": [
+    8,
+    476,
+    477,
+    478,
+    479
+  ],
+  "bib_page_count": 51,
+  "bib_page": 525,
+  "first_25_lines": [
+    "512",
+    "Bibliography",
+    "Zhu, J.-Y., Park, T., Isola, P., & Efros, A. A.",
+    "(2017).",
+    "Unpaired image-to-image transla-",
+    "tion using cycle-consistent adversarial net-",
+    "works. IEEE/CVF International Conference",
+    "on Computer Vision, 2223–2232. 297, 302",
+    "Zhu, X., Su, W., Lu, L., Li, B., Wang, X., & Dai,",
+    "J. (2020b).",
+    "Deformable DETR: Deformable",
+    "transformers for end-to-end object detection.",
+    "International Conference on Learning Repre-",
+    "sentations. 238",
+    "Zhuang, F., Qi, Z., Duan, K., Xi, D., Zhu, Y., Zhu,",
+    "H., Xiong, H., & He, Q. (2020). A comprehen-",
+    "sive survey on transfer learning. Proceedings",
+    "of the IEEE, 109(1), 43–76. 159",
+    "Ziegler, Z., & Rush, A. (2019). Latent normaliz-",
+    "ing flows for discrete sequences. International",
+    "Conference on Machine Learning, 7673–7682.",
+    "323, 324",
+    "Zong, B., Song, Q., Min, M. R., Cheng, W.,",
+    "Lumezanu, C., Cho, D., & Chen, H. (2018).",
+    "Deep autoencoding Gaussian mixture model"
+  ],
+  "bracket_ref_lines": 0,
+  "bracket_samples": []
+}
