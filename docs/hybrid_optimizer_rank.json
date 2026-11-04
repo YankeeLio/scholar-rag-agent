@@ -1,0 +1,85 @@
+{
+  "query": "用了什么优化器，β1 和 β2 是多少？",
+  "hits": [
+    {
+      "rank": 1,
+      "chunk_id": "85ca48a70a7d-005-001",
+      "section": "5 Training",
+      "score": 0.6897,
+      "dense": 0.4829,
+      "sparse": 1.0,
+      "has_adam": false,
+      "head": "English-to-German and English-to-French newstest2014 tests at a fraction of the training cost. Model"
+    },
+    {
+      "rank": 2,
+      "chunk_id": "85ca48a70a7d-006-001",
+      "section": "6 Results",
+      "score": 0.6293,
+      "dense": 0.5231,
+      "sparse": 0.7887,
+      "has_adam": false,
+      "head": "To evaluate the importance of different components of the Transformer, we varied our base model in d"
+    },
+    {
+      "rank": 3,
+      "chunk_id": "85ca48a70a7d-006-000",
+      "section": "6 Results",
+      "score": 0.5996,
+      "dense": 0.5208,
+      "sparse": 0.7178,
+      "has_adam": false,
+      "head": "6 Results 6.1 Machine Translation On the WMT 2014 English-to-German translation task, the big transf"
+    },
+    {
+      "rank": 4,
+      "chunk_id": "85ca48a70a7d-005-000",
+      "section": "5 Training",
+      "score": 0.5916,
+      "dense": 0.5098,
+      "sparse": 0.7142,
+      "has_adam": true,
+      "head": "5 Training This section describes the training regime for our models. 5.1 Training Data and Batching"
+    },
+    {
+      "rank": 5,
+      "chunk_id": "85ca48a70a7d-003-001",
+      "section": "3 Model Architecture",
+      "score": 0.5677,
+      "dense": 0.4425,
+      "sparse": 0.7556,
+      "has_adam": false,
+      "head": "around each of the sub-layers, followed by layer normalization. We also modify the self-attention su"
+    },
+    {
+      "rank": 6,
+      "chunk_id": "85ca48a70a7d-003-002",
+      "section": "3 Model Architecture",
+      "score": 0.5463,
+      "dense": 0.4602,
+      "sparse": 0.6756,
+      "has_adam": false,
+      "head": "√dk . Additive attention computes the compatibility function using a feed-forward network with a sin"
+    },
+    {
+      "rank": 7,
+      "chunk_id": "85ca48a70a7d-003-004",
+      "section": "3 Model Architecture",
+      "score": 0.4815,
+      "dense": 0.421,
+      "sparse": 0.5721,
+      "has_adam": false,
+      "head": "connected feed-forward network, which is applied to each position separately and identically. This c"
+    },
+    {
+      "rank": 8,
+      "chunk_id": "85ca48a70a7d-003-005",
+      "section": "3 Model Architecture",
+      "score": 0.4673,
+      "dense": 0.4429,
+      "sparse": 0.5039,
+      "has_adam": false,
+      "head": "tokens in the sequence. To this end, we add \"positional encodings\" to the input embeddings at the bo"
+    }
+  ]
+}

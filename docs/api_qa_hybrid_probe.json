@@ -1,0 +1,25 @@
+{
+  "answer": "Transformer 使用了 Adam 优化器 [4]，其中 β1 = 0.9，β2 = 0.98 [4]。",
+  "citations": [
+    {
+      "section": "5 Training",
+      "chunk_id": "85ca48a70a7d-005-001"
+    },
+    {
+      "section": "6 Results",
+      "chunk_id": "85ca48a70a7d-006-000"
+    },
+    {
+      "section": "6 Results",
+      "chunk_id": "85ca48a70a7d-006-001"
+    },
+    {
+      "section": "5 Training",
+      "chunk_id": "85ca48a70a7d-005-000"
+    },
+    {
+      "section": "3 Model Architecture",
+      "chunk_id": "85ca48a70a7d-003-000"
+    }
+  ]
+}

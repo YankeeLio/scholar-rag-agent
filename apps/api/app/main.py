@@ -24,11 +24,13 @@ from app.chunker import Chunker
 from app.embedding import EmbeddingService
 from app.indexer import VectorIndex
 from app.parser import PdfParser
+from app.retriever import HybridRetriever
 
 # ----------------------------------------------------------------------
 # shared singletons
 emb = EmbeddingService()
 idx = VectorIndex()
+retriever = HybridRetriever(idx, emb)
 _model_ready = threading.Event()
 _model_error: dict | None = None
 
@@ -185,7 +187,7 @@ class SearchRequest(BaseModel):
 @app.post("/api/search")
 def search(req: SearchRequest) -> dict:
     _wait_model()
-    hits = idx.search(req.query, emb, top_k=req.top_k)
+    hits = retriever.search(req.query, top_k=req.top_k)
     return {"query": req.query, "hits": hits}
 
 
@@ -199,7 +201,7 @@ class QARequest(BaseModel):
 def _run_qa(req: QARequest) -> tuple[list[dict], str | None]:
     """Shared retrieval; returns (hits, note_if_no_key)."""
     _wait_model()
-    hits = idx.search(req.question, emb, top_k=req.top_k)
+    hits = retriever.search(req.question, top_k=req.top_k)
     if not config.LLM_API_KEY:
         return hits, "DEEPSEEK_API_KEY 未配置：已返回检索证据，配置后启用 LLM 生成回答"
     return hits, None

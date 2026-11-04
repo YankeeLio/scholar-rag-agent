@@ -9,3 +9,5 @@ python-dotenv>=1.0
 networkx>=3.2
 openai>=1.40
 httpx>=0.27
+rank-bm25>=0.2
+jieba>=0.42
