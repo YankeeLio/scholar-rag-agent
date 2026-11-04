@@ -42,3 +42,39 @@
 3. BGE-M3 本地加载 + v1 建索引（CPU 计时）
 4. 混合检索（向量 + BM25）+ 溯源锚点元数据
 5. FastAPI 骨架：上传 / 解析 / 问答接口
+
+---
+
+## Day 2（2026-11-04）
+
+### 完成项
+
+| 项 | 结果 | 验证方式 |
+|---|---|---|
+| git 仓库 | main 分支初始化，identity YankeeLio，.gitignore 排除 .venv/.env/data | 提交 b5182ff / 53bae4e |
+| 结构化解析 parser.py | 行级粒度（page/bbox/字号/字体）；标题/作者/摘要启发式；章节树支持内联编号 + arXiv 独立编号行配对；参考文献独立条目；表格仅收 "Table N:" 题注；行级引用号 | parser_verify.json：v1/v7 均命中标题、8 位作者、1–7 章节树、refs 36/40、表格 4，解析约 0.3s |
+| 切块器 chunker.py | 按章节边界分组（bisect），超长章节按 1800 字符拆块；每块携带 doc_id/section/pages/start_line/end_line/ref_ids 锚点 | chunker_verify.json：v1=27 块（max 1799，0 超限）；541 页教材=893 块、解析 6.9s + 切块 0.27s |
+| BGE-M3 + Chroma 索引 | BAAI/bge-m3 本地 CPU（1024 维），模型缓存 data/hf_cache（hf-mirror，2.19GB）；Chroma 持久化 data/chroma，cosine 度量 | index_verify.json：27 块入库；β1/β2、8GPU×3.5 天、BLEU 28.4 三问全部命中且带页码/行号锚点，单查 0.3–0.6s |
+| FastAPI 骨架 | main.py：/health、上传（解析→切块→索引）、文档列表/详情、语义检索；QA 接口暂返回检索证据（Key 未配置） | api_health/upload/probe2 json：上传 v1 返回完整结构化 + 27 块入库；搜索命中带锚点 |
+
+### Day 2 关键决策与坑
+
+1. **BGE-M3 下载**：huggingface_hub 直连卡死（0 字节），改 hf-mirror 经 WebClient 测速正常（≈4–5 MB/s）；实际 huggingface_hub 后台最终下载成功（2.19GB，加载 203s 首次 / 40s 缓存命中）。
+2. **config 路径层级 bug**：ROOT_DIR 误算为 apps/，导致模型在错误目录重复下载 2.2GB → 修正为 `API_DIR.parents[2]`，删除重复目录。
+3. **端口冲突**：8000 被本机其他进程占用（PID 3104，未动），开发期改用 8010。
+4. **解析启发式迭代**：作者误收标题（改为 title 后、Abstract 前采集）、"3.5 days." 被当章节（要求标题以 ASCII 字母开头且不以句点结尾）、页眉 arXiv 行混入章节树（显式排除）。
+5. **Chroma metadata 限制**：仅接受 str/int/float/bool，pages/ref_ids 序列化为逗号字符串。
+
+### 待办（依赖选手）
+
+- [ ] 报名缴费（11-18 截止，最紧急）
+- [ ] DeepSeek API Key → 填入 `apps/api/.env`（.env.example 已更新完整模板）
+- [ ] GitHub Public 仓库建立
+
+### Day 3 计划
+
+1. DeepSeek 接入（openai SDK + 流式 SSE），QA 接口启用 LLM 生成 + 引用渲染
+2. 混合检索升级：BM25（稀疏）+ 向量（稠密）加权融合
+3. 语义去重（v1 vs v7）与版本差异摘要
+4. 前端骨架（apps/web）：文档列表 + 问答面板 + 溯源高亮
+
