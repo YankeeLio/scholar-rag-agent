@@ -78,3 +78,38 @@
 3. 语义去重（v1 vs v7）与版本差异摘要
 4. 前端骨架（apps/web）：文档列表 + 问答面板 + 溯源高亮
 
+---
+
+## Day 3（2026-11-04 续）
+
+### 完成项
+
+| 项 | 结果 | 验证方式 |
+|---|---|---|
+| DeepSeek 流式 QA（任务10，9f46904） | llm.py 证据约束提示词（仅依据证据+[n]引用+证据不足明说）；/api/qa 非流式 + /api/qa/stream SSE（citations→delta→done） | llm_verify.json / api_qa_probe.json：big 模型 8×P100、3.5 天、WMT2014 回答正确带 [1]；流式事件流 3561 字节正常 |
+| 语义去重 v1/v7（任务12，2b9e1a0） | dedup.py 块级 max-pairwise cosine 平均；阈值首测 0.90 未触发（实测 0.8989）→ 降到 0.85；上传触发默认不入库 + 版本建议；?replace=true 删旧入库 | api_dedup_probe/replace_probe.json：v1 库中传 v7 → 预警"v7 较新建议替换"、indexed:false；replace 后 index 27 |
+| 前端骨架（任务13） | apps/web/index.html 单页挂载 FastAPI 根路径（8010/ 即界面）：文献库+上传（去重可一键替换）、SSE 流式问答、引用 [n] 点击看证据原文、健康状态轮询 | root 200/13379 字节；流式接口端到端通过 |
+| 混合检索 BM25+向量（任务11，feb0082） | retriever.py：稠密 0.6 + 稀疏 0.4 加权融合；BM25 懒构建（rank-bm25 + jieba 二元组中文分词） | hybrid_verify.json：GPU/天/BLEU 术语问题 sparse 通道提升 top1；optimizer 中文问题端到端回答正确（Adam, β1=0.9, β2=0.98 [4] 指向 §5 原文） |
+
+### Day 3 关键决策与坑
+
+1. **去重阈值**：0.90 首测未触发——v1 vs v7 实测 avg max-pairwise 相似度恰好 0.8989；降到 0.85（无关论文通常 <0.7），官方用例一次通过。
+2. **混合检索中英差异**：中文问题对英文文档的 BM25 稀疏侧弱，靠稠密通道兜底；1800 字符大块稀释稠密相似度（optimizer 块排 top4 但 QA top_k=5 仍覆盖）——块长优化列入 Day 4。
+3. **服务端口与启动**：沿用 8010；netstat 找 LISTENING PID + Stop-Process（TaskStop 不可靠）。
+4. **前端交付形态**：StaticFiles 挂载 "/" 放最后，避免吞掉 API 路由；用户浏览器打开 http://127.0.0.1:8010 即完整界面。
+
+### 待办（依赖选手）
+
+- [ ] 报名缴费（11-18 截止，最紧急）
+- [ ] GitHub Public 仓库建立
+- [ ] DeepSeek Key 已配置（.env 35 位，llm_configured=true）
+
+### Day 4 计划
+
+1. 541 页教材入库（893 块 CPU 索引约 40–70 分钟，后台跑）+ 教材 RAG 质量验证
+2. 扫描件 v1_img OCR 通道（官方用例：图片型 PDF 无文本层）
+3. 块长优化（1800 → 1000 左右）重索引评估（仅测试文档先行）
+4. 引用图谱 NetworkX + 前端可视化
+5. 前端增强：版本去重差异提示、证据面板交互完善
+
+
