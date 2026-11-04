@@ -16,20 +16,30 @@ except ImportError:  # dotenv optional; env vars can be set manually
 # project root: <repo>/apps/api/app -> <repo>
 API_DIR = Path(__file__).resolve().parent
 ROOT_DIR = API_DIR.parents[2]
+ENV_FILE = API_DIR.parent / ".env"  # apps/api/.env
 
 if load_dotenv is not None:
-    load_dotenv(API_DIR / ".env")
+    load_dotenv(ENV_FILE)
 
 
 def _env(name: str, default: str) -> str:
     return os.environ.get(name, default)
 
 
+def _env_path(name: str, default: Path) -> Path:
+    """Resolve a configured path; relative values anchor to the project root."""
+    v = os.environ.get(name, "")
+    if not v:
+        return default
+    p = Path(v)
+    return p if p.is_absolute() else (ROOT_DIR / p)
+
+
 # --- paths -------------------------------------------------------------
-DATA_DIR = Path(_env("DATA_DIR", str(ROOT_DIR / "data")))
-VECTOR_DIR = Path(_env("VECTOR_DIR", str(DATA_DIR / "chroma")))
-HF_HOME = Path(_env("HF_HOME", str(DATA_DIR / "hf_cache")))
-PDF_DIR = Path(_env("PDF_DIR", str(ROOT_DIR / "pdf")))
+DATA_DIR = _env_path("DATA_DIR", ROOT_DIR / "data")
+VECTOR_DIR = _env_path("VECTOR_DIR", DATA_DIR / "chroma")
+HF_HOME = _env_path("HF_HOME", DATA_DIR / "hf_cache")
+PDF_DIR = _env_path("PDF_DIR", ROOT_DIR / "pdf")
 
 # --- embedding ---------------------------------------------------------
 BGE_MODEL_NAME = _env("BGE_MODEL_NAME", "BAAI/bge-m3")
