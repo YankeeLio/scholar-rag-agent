@@ -1,0 +1,53 @@
+{
+  "answer": "Transformer 的 big 模型在 8 块 P100 GPU 上训练，训练耗时 3.5 天 [1]。",
+  "citations": [
+    {
+      "chunk_id": "e2aef5484cbd-008-000",
+      "text": "6\nResults\n6.1\nMachine Translation\nOn the WMT 2014 English-to-German translation task, Our big transformer model (Transformer\n(big) in Table 2) outperforms the best previously reported models (including ensembles) by more\nthan 2.0 BLEU, establishing a new state-of-the-art BLEU score of 28.4. The conﬁguration of this\nmodel is listed in the bottom line of Table 3. Training took 3.5 days on 8 P100 GPUs. Even our base\nmodel surpasses all previously published models and ensembles, at a fraction of the training cost of\nany of the previous best models.\n7\nTable 2: The Transformer achieves better BLEU scores than previous state-of-the-art models on the\nEnglish-to-German and English-to-French newstest2014 tests at a fraction of the training cost.\nModel\nBLEU\nTraining Cost (FLOPs)\nEN-DE\nEN-FR\nEN-DE\nEN-FR\nByteNet [16]\n23.75\nDeep-Att + PosUnk [35]\n39.2\n1.0 · 1020\nGNMT + RL [34]\n24.6\n39.92\n2.3 · 1019\n1.4 · 1020\nConvS2S [9]\n25.16\n40.46\n9.6 · 1018\n1.5 · 1020\nMoE [29]\n26.03\n40.56\n2.0 · 1019\n1.2 · 1020\nDeep-Att + PosUnk Ensemble [35]\n40.4\n8.0 · 1020\nGNMT + RL Ensemble [34]\n26.30\n41.16\n1.8 · 1020\n1.1 · 1021\nConvS2S Ensemble [9]\n26.36\n41.29\n7.7 · 1019\n1.2 · 1021\nTransformer (base model)\n27.3\n38.1\n3.3 · 1018\nTransformer (big)\n28.4\n41.0\n2.3 · 1019\nOn the WMT 2014 English-to-French translation task, our big model achieves a BLEU score of 41.0,\noutperforming all of the previously published single models, at less than 1/4 the training cost of the\nprevious state-of-the-art model. The Transformer (big) model trained for English-to-French used\ndropout rate Pdrop = 0.1, instead of 0.3.\nFor the base models, we used a single model obtained by averaging the last 5 checkpoints, which\nwere written at 10-minute intervals. For the big models, we averaged the last 20 checkpoints. We",
+      "metadata": {
+        "doc_id": "e2aef5484cbd",
+        "start_line": 339,
+        "ref_ids": "9,16,29,34,35",
+        "source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf",
+        "chunk_id": "e2aef5484cbd-008-000",
+        "pages": "6,7",
+        "end_line": 406,
+        "section": "6 Results",
+        "title": "Attention Is All You Need"
+      },
+      "score": 0.6606
+    },
+    {
+      "chunk_id": "e2aef5484cbd-003-000",
+      "text": "computation [29], while also improving model performance in case of the latter. The fundamental\nconstraint of sequential computation, however, remains.\nAttention mechanisms have become an integral part of compelling sequence modeling and transduc-\ntion models in various tasks, allowing modeling of dependencies without regard to their distance in\nthe input or output sequences [2, 17]. In all but a few cases [25], however, such attention mechanisms\nare used in conjunction with a recurrent network.\nIn this work we propose the Transformer, a model architecture eschewing recurrence and instead\nrelying entirely on an attention mechanism to draw global dependencies between input and output.\nThe Transformer allows for signiﬁcantly more parallelization and can reach a new state of the art in\ntranslation quality after being trained for as little as twelve hours on eight P100 GPUs.",
+      "metadata": {
+        "title": "Attention Is All You Need",
+        "start_line": 56,
+        "section": "1 Introduction",
+        "pages": "1",
+        "end_line": 66,
+        "ref_ids": "25,29",
+        "chunk_id": "e2aef5484cbd-003-000",
+        "doc_id": "e2aef5484cbd",
+        "source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf"
+      },
+      "score": 0.5705
+    },
+    {
+      "chunk_id": "e2aef5484cbd-007-000",
+      "text": "5\nTraining\nThis section describes the training regime for our models.\n5.1\nTraining Data and Batching\nWe trained on the standard WMT 2014 English-German dataset consisting of about 4.5 million\nsentence pairs. Sentences were encoded using byte-pair encoding [3], which has a shared source-\ntarget vocabulary of about 37000 tokens. For English-French, we used the signiﬁcantly larger WMT\n6\n2014 English-French dataset consisting of 36M sentences and split tokens into a 32000 word-piece\nvocabulary [34]. Sentence pairs were batched together by approximate sequence length. Each training\nbatch contained a set of sentence pairs containing approximately 25000 source tokens and 25000\ntarget tokens.\n5.2\nHardware and Schedule\nWe trained our models on one machine with 8 NVIDIA P100 GPUs. For our base models using\nthe hyperparameters described throughout the paper, each training step took about 0.4 seconds. We\ntrained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the\nbottom line of table 3), step time was 1.0 seconds, and the models were trained for 300,000 steps or\n3.5 days.\n5.3\nOptimizer\nWe used the Adam optimizer [18] with β1 = 0.9, β2 = 0.98 and ϵ = 10−9. We varied the learning\nrate over the course of training, according to the formula:\nlrate = d−0.5\nmodel · min(step_num−0.5, step_num · warmup_steps−1.5)\n(3)\nThis corresponds to increasing the learning rate linearly for the ﬁrst warmup_steps training steps,\nand decreasing it thereafter proportionally to the inverse square root of the step number. We used\nwarmup_steps = 4000.\n5.4\nRegularization\nWe employ three types of regularization during training:\nResidual Dropout\nWe apply dropout [30] to the output of each sub-layer, before it is added to the",
+      "metadata": {
+        "doc_id": "e2aef5484cbd",
+        "source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf",
+        "start_line": 287,
+        "section": "5 Training",
+        "pages": "5,6",
+        "end_line": 322,
+        "chunk_id": "e2aef5484cbd-007-000",
+        "ref_ids": "3,18,30,34",
+        "title": "Attention Is All You Need"
+      },
+      "score": 0.5668
+    }
+  ]
+}

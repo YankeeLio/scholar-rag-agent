@@ -1,0 +1,28 @@
+{
+  "question": "Transformer 的 big 模型训练时用了多少 GPU，训练了多少天？训练目标是哪个数据集？",
+  "retrieve_secs": 40.7,
+  "llm_secs": 2.81,
+  "model": "deepseek-chat",
+  "answer": "Transformer 的 big 模型训练使用了 8 块 P100 GPU，训练耗时 3.5 天 [1]。其训练目标是 WMT 2014 英德翻译任务 [1]。",
+  "citation_count": "e2aef5484cbd-008-000",
+  "citations": [
+    {
+      "chunk_id": "e2aef5484cbd-008-000",
+      "section": "6 Results",
+      "pages": "6,7",
+      "score": 0.6573
+    },
+    {
+      "chunk_id": "e2aef5484cbd-003-000",
+      "section": "1 Introduction",
+      "pages": "1",
+      "score": 0.5921
+    },
+    {
+      "chunk_id": "e2aef5484cbd-007-000",
+      "section": "5 Training",
+      "pages": "5,6",
+      "score": 0.5746
+    }
+  ]
+}

@@ -9,15 +9,17 @@ Run:  cd apps/api && .venv\\Scripts\\uvicorn app.main:app --host 0.0.0.0 --port 
 """
 from __future__ import annotations
 
+import json as _json
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app import config
+from app import config, llm
 from app.chunker import Chunker
 from app.embedding import EmbeddingService
 from app.indexer import VectorIndex
@@ -166,20 +168,47 @@ def search(req: SearchRequest) -> dict:
 
 
 # ----------------------------------------------------------------------
-# RAG QA: evidence-first; LLM answer wired in on Day 3
+# RAG QA: retrieve -> evidence -> DeepSeek generation (streaming)
 class QARequest(BaseModel):
     question: str
     top_k: int = 5
 
 
-@app.post("/api/qa")
-def qa(req: QARequest) -> dict:
+def _run_qa(req: QARequest) -> tuple[list[dict], str | None]:
+    """Shared retrieval; returns (hits, note_if_no_key)."""
     _wait_model()
     hits = idx.search(req.question, emb, top_k=req.top_k)
     if not config.LLM_API_KEY:
-        return {
-            "answer": None,
-            "note": "DEEPSEEK_API_KEY 未配置：已返回检索证据，配置后启用 LLM 生成回答",
-            "citations": hits,
-        }
-    raise HTTPException(501, "LLM generation not wired yet (Day 3)")
+        return hits, "DEEPSEEK_API_KEY 未配置：已返回检索证据，配置后启用 LLM 生成回答"
+    return hits, None
+
+
+@app.post("/api/qa")
+def qa(req: QARequest) -> dict:
+    hits, note = _run_qa(req)
+    if note:
+        return {"answer": None, "note": note, "citations": hits}
+    answer = llm.chat_complete(req.question, hits)
+    return {"answer": answer, "citations": hits}
+
+
+@app.post("/api/qa/stream")
+def qa_stream(req: QARequest) -> StreamingResponse:
+    hits, note = _run_qa(req)
+    if note:
+        raise HTTPException(400, note)
+
+    def gen():
+        # 1) evidence first so the UI can render citations immediately
+        yield "data: " + _json.dumps(
+            {"type": "citations", "citations": hits},
+            ensure_ascii=False) + "\n\n"
+        # 2) token stream
+        for delta in llm.chat_stream(req.question, hits):
+            yield "data: " + _json.dumps(
+                {"type": "delta", "text": delta},
+                ensure_ascii=False) + "\n\n"
+        yield "data: " + _json.dumps(
+            {"type": "done"}, ensure_ascii=False) + "\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
