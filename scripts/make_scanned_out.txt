@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "G:\竞赛\2026传智杯-豆包\scripts\make_scanned.py", line 24, in <module>
+    print("rendered_pages:", out.page_count)
+                             ^^^^^^^^^^^^^^
+  File "G:\竞赛\2026传智杯-豆包\apps\api\.venv\Lib\site-packages\pymupdf\__init__.py", line 6022, in page_count
+    raise ValueError('document closed')
+ValueError: document closed

@@ -1,0 +1,5 @@
+{
+  "driver": "NVIDIA Virtual Audio Device (Wave Extensible) (WDM) / 4.65.0.3 / 02/28/2024 08:00:00",
+  "nvml": true,
+  "nvcuda": true
+}

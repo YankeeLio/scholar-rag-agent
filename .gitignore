@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 环境变量（含密钥，禁止入库）
+.env
+
+# 数据与运行时产物
+data/
+*.log
+
+# Node
+node_modules/
+.next/
+out/
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
