@@ -1,0 +1,110 @@
+{
+  "v1": {
+    "pages": 15,
+    "lines": 1015,
+    "sections_found": 9,
+    "chunk_count": 27,
+    "chunk_chars_min": 40,
+    "chunk_chars_max": 1799,
+    "chunk_chars_avg": 1364.0,
+    "chunks_over_max": 0,
+    "parse_secs": 0.47,
+    "chunk_secs": 0.0,
+    "top_sections": [
+      [
+        "3 Model Architecture",
+        6
+      ],
+      [
+        "6 Results",
+        4
+      ],
+      [
+        "References",
+        4
+      ],
+      [
+        "4 Why Self-Attention",
+        3
+      ],
+      [
+        "frontmatter",
+        2
+      ],
+      [
+        "1 Introduction",
+        2
+      ],
+      [
+        "5 Training",
+        2
+      ],
+      [
+        "Attention Visualizations",
+        2
+      ],
+      [
+        "2 Background",
+        1
+      ],
+      [
+        "7 Conclusion",
+        1
+      ]
+    ]
+  },
+  "book": {
+    "pages": 541,
+    "lines": 31372,
+    "sections_found": 281,
+    "chunk_count": 893,
+    "chunk_chars_min": 1,
+    "chunk_chars_max": 1799,
+    "chunk_chars_avg": 1469.2,
+    "chunks_over_max": 0,
+    "parse_secs": 6.96,
+    "chunk_secs": 0.27,
+    "top_sections": [
+      [
+        "Notes",
+        125
+      ],
+      [
+        "8 Sept 2017. https://",
+        121
+      ],
+      [
+        "Problems",
+        42
+      ],
+      [
+        "Index",
+        20
+      ],
+      [
+        "9.3 Heuristics to improve performance",
+        12
+      ],
+      [
+        "21.1 Value alignment",
+        10
+      ],
+      [
+        "10.2 Convolutional networks for 1D inputs",
+        9
+      ],
+      [
+        "15.2 Improving stability",
+        9
+      ],
+      [
+        "1.1 Supervised learning",
+        7
+      ],
+      [
+        "12.7 Decoder model example: GPT3",
+        7
+      ]
+    ]
+  }
+}
