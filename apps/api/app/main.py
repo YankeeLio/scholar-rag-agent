@@ -234,3 +234,11 @@ def qa_stream(req: QARequest) -> StreamingResponse:
             {"type": "done"}, ensure_ascii=False) + "\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ----------------------------------------------------------------------
+# static frontend (served at /); mount last so API routes take priority
+WEB_DIR = config.ROOT_DIR / "apps" / "web"
+if WEB_DIR.exists():
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")

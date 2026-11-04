@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>科研助手 Agent · SciLoom</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --panel: #ffffff; --ink: #1c2430; --muted: #5b6b7d;
+    --line: #e2e8f0; --accent: #1f5aff; --accent-soft: #eaf1ff;
+    --good: #16a34a; --warn: #d97706; --err: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+         background: var(--bg); color: var(--ink); height: 100vh; display: flex; flex-direction: column; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line);
+           padding: 10px 20px; display: flex; align-items: center; gap: 14px; }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  #status { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+  .pill { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; }
+  .pill.ok { color: var(--good); border-color: #bae6cd; background: #f0fdf4; }
+  .pill.bad { color: var(--err); border-color: #fecaca; background: #fef2f2; }
+
+  main { flex: 1; display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: 0; }
+  aside { border-right: 1px solid var(--line); background: var(--panel);
+          display: flex; flex-direction: column; min-height: 0; }
+  .aside-head { padding: 14px 16px; border-bottom: 1px solid var(--line);
+                display: flex; justify-content: space-between; align-items: center; }
+  .aside-head b { font-size: 13px; }
+  .upload-btn { background: var(--accent); color: #fff; border: none; border-radius: 6px;
+                padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  .upload-btn:hover { opacity: .9; }
+  #doc-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .doc-card { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+              margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+  .doc-card:hover { border-color: var(--accent); }
+  .doc-card .t { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .doc-card .m { font-size: 11px; color: var(--muted); }
+  #upload-note { padding: 8px 16px; font-size: 12px; }
+  .note.warn { color: var(--warn); background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; margin: 0 8px 8px; }
+  .note.ok { color: var(--good); background: #f0fdf4; border: 1px solid #bae6cd; border-radius: 6px; padding: 8px 10px; margin: 0 8px 8px; }
+
+  section { display: flex; flex-direction: column; min-height: 0; }
+  .chat-head { padding: 12px 20px; border-bottom: 1px solid var(--line);
+               background: var(--panel); font-size: 13px; font-weight: 600; }
+  #chat { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 92%; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.7; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: #fff; }
+  .msg.bot { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); }
+  .msg .cites { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .msg .cite-item { font-size: 12px; color: var(--muted); margin: 3px 0; word-break: break-all; }
+  .cite-ref { color: var(--accent); font-weight: 700; cursor: pointer; background: var(--accent-soft);
+              border-radius: 4px; padding: 0 4px; }
+  .cite-ref:hover { text-decoration: underline; }
+  .thinking { font-size: 12px; color: var(--muted); font-style: italic; }
+  .typing::after { content: "▍"; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .input-row { padding: 12px 20px; border-top: 1px solid var(--line); background: var(--panel); display: flex; gap: 10px; }
+  #question { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
+  #question:focus { border-color: var(--accent); }
+  #ask-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
+  #ask-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .suggest { padding: 0 20px 10px; display: flex; gap: 8px; flex-wrap: wrap; background: var(--panel); }
+  .suggest button { border: 1px solid var(--line); background: #fff; border-radius: 999px;
+                    padding: 4px 12px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .suggest button:hover { border-color: var(--accent); color: var(--accent); }
+  #ev-panel { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 20px; max-height: 240px; overflow-y: auto; }
+  #ev-panel h4 { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  #ev-panel pre { font-size: 12px; white-space: pre-wrap; line-height: 1.6; color: var(--ink); }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>科研助手 Agent</h1>
+  <span class="sub">PDF 解析 · 抗幻觉 RAG · 溯源问答</span>
+  <div id="status">
+    <span class="pill" id="st-model">模型加载中…</span>
+    <span class="pill" id="st-llm">LLM 检查中…</span>
+    <span class="pill" id="st-index">索引 0</span>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="aside-head">
+      <b>📚 文献库</b>
+      <label class="upload-btn">上传 PDF<input type="file" id="file" accept=".pdf" style="display:none"></label>
+    </div>
+    <div id="upload-note"></div>
+    <div id="doc-list"></div>
+  </aside>
+
+  <section>
+    <div class="chat-head">💬 溯源问答（回答带引用锚点，点击可查看原文证据）</div>
+    <div id="chat">
+      <div class="msg bot">你好，我是科研助手。上传 PDF 文献后，可以问我论文中的细节问题，
+        例如：“Transformer 的 big 模型用了多少 GPU 训练？”<br>
+        <span class="thinking">回答仅基于文献原文，并标注 [n] 引用来源。</span>
+      </div>
+    </div>
+    <div class="suggest" id="suggest"></div>
+    <div id="ev-panel"><h4>📄 证据原文</h4><pre id="ev-text"></pre></div>
+    <div class="input-row">
+      <input id="question" placeholder="输入科研问题…（回车发送）">
+      <button id="ask-btn">发送</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = location.origin; // served from the same FastAPI origin
+const $ = (s) => document.querySelector(s);
+
+/* ---------- health ---------- */
+async function refreshHealth() {
+  try {
+    const h = await (await fetch(API + "/health")).json();
+    setPill("#st-model", "模型" + (h.model_loaded ? "就绪" : "加载中…"), h.model_loaded);
+    setPill("#st-llm", "LLM " + (h.llm_configured ? "已配置" : "未配置"), h.llm_configured);
+    $("#st-index").textContent = "索引 " + h.index_count;
+  } catch (e) { setPill("#st-model", "服务未连接", false); }
+}
+function setPill(sel, text, ok) {
+  const el = $(sel); el.textContent = text; el.className = "pill " + (ok ? "ok" : "bad");
+}
+
+/* ---------- documents ---------- */
+async function loadDocs() {
+  try {
+    const r = await (await fetch(API + "/api/documents")).json();
+    const list = $("#doc-list"); list.innerHTML = "";
+    (r.documents || []).forEach(d => {
+      const card = document.createElement("div");
+      card.className = "doc-card";
+      card.innerHTML = `<div class="t">${esc(d.title)}</div>
+        <div class="m">${d.chunks} 个语义块</div>`;
+      list.appendChild(card);
+    });
+    buildSuggest(r.documents || []);
+  } catch (e) { $("#doc-list").innerHTML = '<div class="m" style="padding:8px">文档列表加载失败</div>'; }
+}
+
+/* ---------- upload ---------- */
+$("#file").addEventListener("change", async (ev) => {
+  const file = ev.target.files[0]; if (!file) return;
+  const note = $("#upload-note");
+  note.innerHTML = `<span class="thinking">正在解析并索引 ${esc(file.name)}（大文件需 1-2 分钟）…</span>`;
+  try {
+    const fd = new FormData(); fd.append("file", file);
+    const r = await (await fetch(API + "/api/documents/upload", { method: "POST", body: fd })).json();
+    if (r.dedup_warning && r.dedup_warning.length && !r.indexed) {
+      note.innerHTML = `<div class="note warn">⚠️ 语义去重预警：${esc(r.dedup_warning[0].recommendation)}
+        <br>相似度 ${(r.dedup_warning[0].avg_similarity * 100).toFixed(1)}%，未入库。
+        <a href="javascript:void(0)" onclick="replaceUpload('${file.name}')">以新版本替换入库</a></div>`;
+    } else if (r.dedup_warning && r.dedup_warning.length && r.indexed) {
+      note.innerHTML = `<div class="note warn">✅ 已按建议替换：${esc(r.dedup_warning[0].recommendation)}</div>`;
+    } else {
+      note.innerHTML = `<div class="note ok">✅ 入库成功：<b>${esc(r.title)}</b> ·
+        ${r.pages} 页 · ${r.reference_count} 条参考文献 · ${r.chunk_count} 块</div>`;
+    }
+    refreshHealth(); loadDocs();
+  } catch (e) {
+    note.innerHTML = `<div class="note warn">上传失败：${esc(e.message)}</div>`;
+  }
+  ev.target.value = "";
+});
+async function replaceUpload(fileName) {
+  const note = $("#upload-note");
+  const file = $("#file");
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = ".pdf";
+  input.onchange = async (ev) => {
+    const f = ev.target.files[0]; if (!f) return;
+    note.innerHTML = `<span class="thinking">正在替换入库…</span>`;
+    const fd = new FormData(); fd.append("file", f);
+    const r = await (await fetch(API + "/api/documents/upload?replace=true", { method: "POST", body: fd })).json();
+    note.innerHTML = `<div class="note warn">✅ 替换完成：${esc(r.title)}（${r.chunk_count} 块入库）</div>`;
+    refreshHealth(); loadDocs();
+  };
+  input.click();
+}
+
+/* ---------- QA (SSE stream) ---------- */
+let citations = [];
+async function ask() {
+  const q = $("#question").value.trim();
+  if (!q) return;
+  const chat = $("#chat");
+  chat.appendChild(msgEl("user", q));
+  const bot = msgEl("bot", ""); bot.innerHTML = '<span class="thinking">正在检索文献…</span>';
+  chat.appendChild(bot);
+  $("#question").value = ""; $("#ask-btn").disabled = true;
+  citations = [];
+  try {
+    const resp = await fetch(API + "/api/qa/stream", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q, top_k: 3 }),
+    });
+    if (!resp.ok) { const e = await resp.json(); bot.innerHTML = `⚠️ ${esc(e.detail || "请求失败")}`; return; }
+    bot.classList.add("typing"); bot.innerHTML = "";
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const parts = buf.split("\n\n");
+      buf = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith("data: ")) continue;
+        const ev = JSON.parse(part.slice(6));
+        if (ev.type === "citations") {
+          citations = ev.citations;
+          renderCitations(bot, citations);
+        } else if (ev.type === "delta") {
+          bot.innerHTML += esc(ev.text);
+          scrollChat();
+        } else if (ev.type === "done") {
+          bot.classList.remove("typing");
+          if (bot.innerHTML.trim() === "") bot.innerHTML = "（未生成回答）";
+          if (citations.length) renderCitations(bot, citations);
+          scrollChat();
+        }
+      }
+    }
+  } catch (e) {
+    bot.innerHTML = `⚠️ 请求出错：${esc(e.message)}`;
+  } finally {
+    $("#ask-btn").disabled = false;
+  }
+}
+function msgEl(cls, text) { const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; return d; }
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+function scrollChat() { $("#chat").scrollTop = $("#chat").scrollHeight; }
+
+function renderCitations(bot, cites) {
+  const box = document.createElement("div");
+  box.className = "cites";
+  const head = document.createElement("div");
+  head.style.cssText = "font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:600";
+  head.textContent = "引用来源（点击查看原文证据）";
+  box.appendChild(head);
+  cites.forEach((c, i) => {
+    const m = c.metadata || {};
+    const item = document.createElement("div");
+    item.className = "cite-item";
+    const num = document.createElement("span");
+    num.className = "cite-ref";
+    num.textContent = `[${i + 1}]`;
+    num.onclick = () => showEvidence(c, i + 1);
+    item.appendChild(num);
+    item.appendChild(document.createTextNode(` ${m.title || ""} | §${m.section || ""} | p.${m.pages || ""}（行 ${m.start_line}-${m.end_line}） · 相似度 ${(c.score * 100).toFixed(1)}%`));
+    box.appendChild(item);
+  });
+  bot.appendChild(box);
+}
+function showEvidence(c, n) {
+  const p = $("#ev-panel");
+  $("#ev-text").textContent = `[${n}] 出处：${c.metadata.title} | §${c.metadata.section} | p.${c.metadata.pages}（行 ${c.metadata.start_line}-${c.metadata.end_line}）\n\n${c.text}`;
+  p.style.display = "block";
+}
+
+/* ---------- suggest questions ---------- */
+function buildSuggest(docs) {
+  const box = $("#suggest"); box.innerHTML = "";
+  const qs = [
+    "Transformer 的 big 模型用了多少 GPU 训练？",
+    "Transformer 用了什么优化器？β1/β2 是多少？",
+    "WMT 2014 英德任务上 Transformer 的 BLEU 是多少？",
+  ];
+  qs.forEach(q => {
+    const b = document.createElement("button");
+    b.textContent = q;
+    b.onclick = () => { $("#question").value = q; ask(); };
+    box.appendChild(b);
+  });
+}
+
+$("#ask-btn").addEventListener("click", ask);
+$("#question").addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
+
+refreshHealth(); loadDocs();
+setInterval(refreshHealth, 15000);
+</script>
+</body>
+</html>
