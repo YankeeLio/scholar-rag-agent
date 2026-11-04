@@ -1,0 +1,42 @@
+{
+  "doc_id": "85ca48a70a7d",
+  "title": "Attention Is All You Need",
+  "pages": 15,
+  "authors": [
+    "Ashish Vaswani∗",
+    "Noam Shazeer∗",
+    "Niki Parmar∗",
+    "Jakob Uszkoreit∗",
+    "Llion Jones∗",
+    "Aidan N. Gomez∗†",
+    "Łukasz Kaiser∗",
+    "Illia Polosukhin∗‡"
+  ],
+  "abstract": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being mor",
+  "section_titles": [
+    "Introduction",
+    "Background",
+    "Model Architecture",
+    "Why Self-Attention",
+    "Training",
+    "Results",
+    "Conclusion",
+    "References",
+    "Attention Visualizations"
+  ],
+  "reference_count": 40,
+  "table_count": 4,
+  "chunk_count": 27,
+  "dedup_warning": [
+    {
+      "existing_doc_id": "e2aef5484cbd",
+      "existing_title": "Attention Is All You Need",
+      "existing_source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf",
+      "avg_similarity": 0.8989,
+      "threshold": 0.85,
+      "recommendation": "库中已有 v1，本次上传 v7 较新，建议用新版本替换"
+    }
+  ],
+  "indexed": true,
+  "index_count": 27
+}

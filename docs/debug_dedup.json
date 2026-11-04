@@ -1,0 +1,39 @@
+{
+  "meta_count": 54,
+  "embeddings_returned": true,
+  "embeddings_count": 54,
+  "first_meta": {
+    "ref_ids": "",
+    "end_line": 40,
+    "doc_id": "e2aef5484cbd",
+    "section": "frontmatter",
+    "pages": "0",
+    "source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf",
+    "chunk_id": "e2aef5484cbd-000-000",
+    "start_line": 0,
+    "title": "Attention Is All You Need"
+  },
+  "first_emb_len": 1024,
+  "dedup_warnings": [
+    {
+      "existing_doc_id": "85ca48a70a7d",
+      "existing_title": "Attention Is All You Need",
+      "existing_source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v7.pdf",
+      "avg_similarity": 1.0,
+      "threshold": 0.9,
+      "recommendation": "库中已存在高度相似的论文，建议确认后决定保留或替换"
+    }
+  ],
+  "manual_sims": {
+    "e2aef5484cbd": {
+      "avg": 0.8989,
+      "min": 0.6355,
+      "max": 1.0
+    },
+    "85ca48a70a7d": {
+      "avg": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    }
+  }
+}

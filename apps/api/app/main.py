@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app import config, llm
+from app import config, dedup, llm
 from app.chunker import Chunker
 from app.embedding import EmbeddingService
 from app.indexer import VectorIndex
@@ -87,9 +87,10 @@ def health() -> dict:
 
 
 # ----------------------------------------------------------------------
-# upload: parse -> chunk -> embed -> index
+# upload: parse -> chunk -> dedup check -> embed -> index
 @app.post("/api/documents/upload")
-async def upload_document(file: UploadFile = File(...)) -> dict:
+async def upload_document(file: UploadFile = File(...),
+                          replace: bool = False) -> dict:
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(400, "only PDF files are supported")
     dest = UPLOAD_DIR / file.filename
@@ -98,10 +99,29 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
     _wait_model()
     doc = PdfParser().parse(dest)
     chunks = Chunker().chunk(doc)
-    idx.add_document(doc, chunks, emb)
+    doc_id = Chunker._doc_id(str(dest))
 
+    # content-based semantic dedup against the library (arXiv v1/v7 case)
+    warnings = dedup.dedup_check(str(dest), doc.title, chunks, emb, idx)
+    if warnings and not replace:
+        return {
+            "doc_id": doc_id,
+            "title": doc.title,
+            "pages": doc.pages,
+            "dedup_warning": warnings,
+            "indexed": False,
+            "note": "检测到库中存在高相似论文，未入库。可携带 ?replace=true 强制替换，"
+                    "或上传其他文件。",
+        }
+
+    if replace and warnings:
+        # drop every chunk of the old near-duplicate document
+        for w in warnings:
+            idx.collection.delete(where={"doc_id": w["existing_doc_id"]})
+
+    idx.add_document(doc, chunks, emb)
     return {
-        "doc_id": Chunker._doc_id(str(dest)),
+        "doc_id": doc_id,
         "title": doc.title,
         "pages": doc.pages,
         "authors": doc.authors,
@@ -110,6 +130,8 @@ async def upload_document(file: UploadFile = File(...)) -> dict:
         "reference_count": len(doc.references),
         "table_count": len(doc.tables),
         "chunk_count": len(chunks),
+        "dedup_warning": warnings or None,
+        "indexed": True,
         "index_count": idx.count(),
     }
 

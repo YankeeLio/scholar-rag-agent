@@ -1,0 +1,17 @@
+{
+  "doc_id": "85ca48a70a7d",
+  "title": "Attention Is All You Need",
+  "pages": 15,
+  "dedup_warning": [
+    {
+      "existing_doc_id": "e2aef5484cbd",
+      "existing_title": "Attention Is All You Need",
+      "existing_source": "G:\\竞赛\\2026传智杯-豆包\\data\\uploads\\1706.03762v1.pdf",
+      "avg_similarity": 0.8989,
+      "threshold": 0.85,
+      "recommendation": "库中已有 v1，本次上传 v7 较新，建议用新版本替换"
+    }
+  ],
+  "indexed": false,
+  "note": "检测到库中存在高相似论文，未入库。可携带 ?replace=true 强制替换，或上传其他文件。"
+}
