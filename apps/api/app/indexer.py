@@ -40,7 +40,8 @@ class VectorIndex:
         return self.collection.count()
 
     def add_document(self, doc: Document, chunks: list[Chunk],
-                     embedding: EmbeddingService) -> None:
+                     embedding: EmbeddingService,
+                     vecs: Optional[list[list[float]]] = None) -> None:
         if not chunks:
             return
         ids = [c.chunk_id for c in chunks]
@@ -56,7 +57,8 @@ class VectorIndex:
             "end_line": c.end_line,
             "ref_ids": _refs_str(c.ref_ids),
         } for c in chunks]
-        vecs = embedding.embed_documents(texts)
+        if vecs is None:
+            vecs = embedding.embed_documents(texts)
         self.collection.add(ids=ids, documents=texts,
                             metadatas=metas, embeddings=vecs)
 

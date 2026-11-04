@@ -30,10 +30,12 @@ def _version_of(source: str) -> Optional[int]:
 
 def dedup_check(new_source: str, new_title: str,
                 new_chunks: list[Chunk], embedding: EmbeddingService,
-                idx: VectorIndex) -> list[dict]:
+                idx: VectorIndex,
+                new_vecs: Optional[list[list[float]]] = None) -> list[dict]:
     """Compare the new doc's chunks against existing docs in the index.
 
     Returns a list of warning dicts (empty when no near-duplicate found).
+    Pass precomputed new_vecs to avoid embedding the new doc twice.
     """
     if not new_chunks:
         return []
@@ -46,7 +48,8 @@ def dedup_check(new_source: str, new_title: str,
         by_doc.setdefault(did, {"title": meta["title"], "source": meta["source"],
                                 "vecs": []})["vecs"].append(vec)
 
-    new_vecs = embedding.embed_documents([c.text for c in new_chunks])
+    if new_vecs is None:
+        new_vecs = embedding.embed_documents([c.text for c in new_chunks])
 
     warnings: list[dict] = []
     for did, info in by_doc.items():

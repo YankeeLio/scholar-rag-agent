@@ -69,6 +69,10 @@
   #ev-panel { display: none; border-top: 1px solid var(--line); background: var(--panel); padding: 12px 20px; max-height: 240px; overflow-y: auto; }
   #ev-panel h4 { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   #ev-panel pre { font-size: 12px; white-space: pre-wrap; line-height: 1.6; color: var(--ink); }
+  .tabbar { display: flex; gap: 4px; padding: 8px 20px 0; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .tab { border: 1px solid transparent; background: none; padding: 7px 16px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 8px 8px 0 0; }
+  .tab.active { background: var(--bg); border-color: var(--line); border-bottom-color: var(--bg); color: var(--ink); font-weight: 600; }
+  #graph-panel { display: none; flex: 1; flex-direction: column; min-height: 0; background: var(--panel); }
   @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { display: none; } }
 </style>
 </head>
@@ -94,6 +98,10 @@
   </aside>
 
   <section>
+    <div class="tabbar">
+      <button class="tab active" id="tab-qa" onclick="switchTab('qa')">💬 溯源问答</button>
+      <button class="tab" id="tab-graph" onclick="switchTab('graph')">🕸️ 引用图谱</button>
+    </div>
     <div class="chat-head">💬 溯源问答（回答带引用锚点，点击可查看原文证据）</div>
     <div id="chat">
       <div class="msg bot">你好，我是科研助手。上传 PDF 文献后，可以问我论文中的细节问题，
@@ -107,9 +115,15 @@
       <input id="question" placeholder="输入科研问题…（回车发送）">
       <button id="ask-btn">发送</button>
     </div>
+    <div id="graph-panel">
+      <div class="chat-head">🕸️ 引用图谱（库内文档之间的引用关系）</div>
+      <div id="graph-canvas" style="flex:1;min-height:300px"></div>
+      <div id="graph-legend" style="padding:6px 20px;font-size:12px;color:var(--muted)"></div>
+    </div>
   </section>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script>
 const API = location.origin; // served from the same FastAPI origin
 const $ = (s) => document.querySelector(s);
@@ -282,6 +296,52 @@ function buildSuggest(docs) {
 
 $("#ask-btn").addEventListener("click", ask);
 $("#question").addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
+
+/* ---------- citation graph tab ---------- */
+function switchTab(name) {
+  const qa = name === "qa";
+  $("#tab-qa").className = "tab " + (qa ? "active" : "");
+  $("#tab-graph").className = "tab " + (!qa ? "active" : "");
+  const qaArea = document.querySelector("section .chat-head + *");
+  // toggle the panels below the tabbar
+  document.querySelectorAll("section > .chat-head, section > #chat, section > .suggest, section > #ev-panel, section > .input-row")
+    .forEach(el => el.style.display = qa ? "" : "none");
+  const gp = $("#graph-panel");
+  gp.style.display = qa ? "none" : "flex";
+  if (!qa) loadGraph();
+}
+async function loadGraph() {
+  const canvas = $("#graph-canvas");
+  canvas.innerHTML = '<span class="thinking">加载引用图谱…</span>';
+  const legend = $("#graph-legend");
+  try {
+    const g = await (await fetch(API + "/api/graph")).json();
+    legend.textContent = `库内 ${g.nodes.length} 篇文档，${g.edges.length} 条引用关系（上传互相引用的论文后自动扩展）`;
+    if (window.echarts) {
+      const chart = echarts.init(canvas);
+      const cat = ["文献"];
+      chart.setOption({
+        tooltip: { formatter: p => p.dataType === "node" ? p.data.title : `${p.data.source} → ${p.data.target}` },
+        series: [{
+          type: "graph", layout: "force", roam: true, draggable: true,
+          label: { show: true, position: "bottom", fontSize: 11, formatter: p => p.data.title.length > 22 ? p.data.title.slice(0, 21) + "…" : p.data.title },
+          force: { repulsion: 180, edgeLength: 90 },
+          data: g.nodes.map(n => ({ id: n.id, name: n.title, title: n.title, symbolSize: 14 + Math.min(n.chunks / 30, 36), value: n.chunks })),
+          links: g.edges.map(e => ({ source: e.source, target: e.target })),
+          lineStyle: { color: "#1f5aff", curveness: 0.1, width: 1.6, opacity: 0.75 },
+          emphasis: { focus: "adjacency", lineStyle: { width: 3 } },
+        }],
+      });
+      window.addEventListener("resize", () => chart.resize());
+    } else {
+      canvas.innerHTML = "<div style='padding:14px'>" +
+        g.nodes.map(n => `• ${esc(n.title)}（${n.chunks} 块）`).join("<br>") +
+        "<br><br>引用关系：" + (g.edges.length ? g.edges.length + " 条" : "暂无（当前文档互不引用）") + "</div>";
+    }
+  } catch (e) {
+    canvas.innerHTML = `<span class="thinking">图谱加载失败：${esc(e.message)}</span>`;
+  }
+}
 
 refreshHealth(); loadDocs();
 setInterval(refreshHealth, 15000);

@@ -37,6 +37,16 @@ _model_error: dict | None = None
 UPLOAD_DIR = config.DATA_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+_ocr_engine = None  # lazily created; OCR models load on first scanned PDF
+
+
+def _get_ocr():
+    global _ocr_engine
+    if _ocr_engine is None:
+        from app.ocr import OcrEngine
+        _ocr_engine = OcrEngine()
+    return _ocr_engine
+
 
 def _preload_model() -> None:
     """Load BGE-M3 in a background thread (fast startup)."""
@@ -100,11 +110,19 @@ async def upload_document(file: UploadFile = File(...),
 
     _wait_model()
     doc = PdfParser().parse(dest)
+    if not doc.sections and not doc.title:
+        # scanned PDF without a text layer → OCR fallback (official v1_img case)
+        ocr_engine = _get_ocr()
+        doc = ocr_engine.ocr_to_document(dest)
     chunks = Chunker().chunk(doc)
     doc_id = Chunker._doc_id(str(dest))
 
+    # embed once; reuse for dedup check and indexing (saves one full pass)
+    vecs = emb.embed_documents([c.text for c in chunks])
+
     # content-based semantic dedup against the library (arXiv v1/v7 case)
-    warnings = dedup.dedup_check(str(dest), doc.title, chunks, emb, idx)
+    warnings = dedup.dedup_check(str(dest), doc.title, chunks, emb, idx,
+                                 new_vecs=vecs)
     if warnings and not replace:
         return {
             "doc_id": doc_id,
@@ -121,7 +139,7 @@ async def upload_document(file: UploadFile = File(...),
         for w in warnings:
             idx.collection.delete(where={"doc_id": w["existing_doc_id"]})
 
-    idx.add_document(doc, chunks, emb)
+    idx.add_document(doc, chunks, emb, vecs=vecs)
     return {
         "doc_id": doc_id,
         "title": doc.title,
@@ -236,6 +254,14 @@ def qa_stream(req: QARequest) -> StreamingResponse:
             {"type": "done"}, ensure_ascii=False) + "\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ----------------------------------------------------------------------
+# citation graph across documents in the library
+@app.get("/api/graph")
+def citation_graph() -> dict:
+    from app.graph import build_graph
+    return build_graph(idx)
 
 
 # ----------------------------------------------------------------------

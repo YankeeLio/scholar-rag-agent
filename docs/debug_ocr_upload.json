@@ -1,0 +1,14 @@
+{
+  "parser_title": "",
+  "parser_sections": 0,
+  "parser_text_chars": 0,
+  "ocr": "triggered",
+  "ocr_title": "1706.03762v1_img",
+  "ocr_sections": 15,
+  "ocr_lines": 975,
+  "ocr_chars": 35920,
+  "chunk_count": 28,
+  "chunk0_section": "Page 1",
+  "chunk0_head": "Attention Is All You Need\nAshish Vaswani*\nNoam Shazeer*\nNiki Parmar*\nJakob Uszko",
+  "status": "ok"
+}
