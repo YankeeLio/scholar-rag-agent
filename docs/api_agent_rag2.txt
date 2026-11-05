@@ -1,0 +1,86 @@
+data: {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "扩散模型 训练目标 损失函数", "top_k": 6}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 6 项"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "denoising diffusion probabilistic model objective noise prediction simplified loss", "top_k": 6}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 6 项"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "18.4 Training evidence lower bound ELBO derivation diffusion model loss equation 18.29", "top_k": 6}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 6 项"}
+
+data: {"type": "delta", "text": "根据文献库中的《Understanding Deep Learning》第 18"}
+
+data: {"type": "delta", "text": " 章，扩散模型的训练目标可以概括为：\n\n## 一、总体目标：最大化对数似然（通过"}
+
+data: {"type": "delta", "text": " ELBO）\n\n扩散模型把观测数据 x 与一系列隐变量 {z₁…z_T} 的联合"}
+
+data: {"type": "delta", "text": "分布写成\nPr(x, z₁...T | ϕ₁...T) = Pr(x|z₁, ϕ"}
+
+data: {"type": "delta", "text": "₁) ∏_{t=2}^{T} Pr(z_{t−1}|z_t, ϕ_t) · Pr"}
+
+data: {"type": "delta", "text": "(z_T)（式 18.17）。\n\n训练目标是最大化训练数据的对数似然：\nϕ̂₁."}
+
+data: {"type": "delta", "text": "..T = argmax ∑ᵢ log Pr(xᵢ|ϕ₁...T)（式 18.1"}
+
+data: {"type": "delta", "text": "9）。\n\n由于对隐变量边缘化（式 18.18）不可解，因此像 VAE 一样用 J"}
+
+data: {"type": "delta", "text": "ensen 不等式构造似然下界，即**证据下界（ELBO）**，并对其优化（《U"}
+
+data: {"type": "delta", "text": "nderstanding Deep Learning》§18.4、§18.4.1"}
+
+data: {"type": "delta", "text": "）。\n\n## 二、最终形式：简单的（加权）最小二乘损失\n\nELBO 推导后最终归"}
+
+data: {"type": "delta", "text": "结为一个简单的**最小二乘（least-squares）形式**的损失函数（式 "}
+
+data: {"type": "delta", "text": "18.29）：它最小化网络对上一时刻隐变量的估计 f_t[z_t, ϕ_t] 与"}
+
+data: {"type": "delta", "text": "\"给定真实无噪数据 x 时该隐变量最可能取值\"之间的差异（《Understand"}
+
+data: {"type": "delta", "text": "ing Deep Learning》§18.4.5、§18.7）。\n\n## 三、"}
+
+data: {"type": "delta", "text": "实践中更好的参数化：预测噪声\n\n虽然式 18.29 可以直接用，但扩散模型在实践"}
+
+data: {"type": "delta", "text": "中**用另一种参数化效果更好**：修改损失函数，让模型去**预测混入原始数据、生"}
+
+data: {"type": "delta", "text": "成当前变量 z_t 的那份噪声 ϵ**（《Understanding Deep "}
+
+data: {"type": "delta", "text": "Learning》§18.5）。\n\n依据前向过程 z_t = √ᾱ_t · x "}
+
+data: {"type": "delta", "text": "+ √(1−ᾱ_t) · ϵ（式 18.30），可反解出\nx = (1/√ᾱ_t"}
+
+data: {"type": "delta", "text": ")·z_t − (√(1−ᾱ_t)/√ᾱ_t)·ϵ（式 18.31），\n把它代入"}
+
+data: {"type": "delta", "text": "式 18.29 的目标项，就把\"预测 x / 预测 z_{t−1}\"的目标重写成"}
+
+data: {"type": "delta", "text": "了\"预测噪声 ϵ\"的形式（式 18.32 起）。这一节还分两部分讨论：§18.5"}
+
+data: {"type": "delta", "text": ".1 重参数化**目标**（式 18.29 第二行前两项），§18.5.2 重参"}
+
+data: {"type": "delta", "text": "数化**网络**（最后一项）。\n\n## 四、补充说明\n\n- 该损失函数对一族兼容"}
+
+data: {"type": "delta", "text": "的扩散过程都适用，只是前向规则和\"如何用估计噪声 g[z_t, ϕ_t] 从 z"}
+
+data: {"type": "delta", "text": "_t 预测 z_{t−1}\"的反向规则不同（如 DDIM、加速采样模型）（《Un"}
+
+data: {"type": "delta", "text": "derstanding Deep Learning》§18.6）。\n- 训练流程"}
+
+data: {"type": "delta", "text": "：取大量真实样本 x → 用扩散核在各时刻 t 生成对应的隐变量 z_t → 训"}
+
+data: {"type": "delta", "text": "练 f_t[z_t, ϕ_t] 最小化式 18.29 的损失（《Understa"}
+
+data: {"type": "delta", "text": "nding Deep Learning》§18.4.5）。\n\n**证据局限**："}
+
+data: {"type": "delta", "text": "以上均来自库内《Understanding Deep Learning》第 18"}
+
+data: {"type": "delta", "text": " 章。库中未检索到 DDPM 原始论文（Ho et al. 2020）等一手文献"}
+
+data: {"type": "delta", "text": "，因此关于\"简化损失（丢弃加权系数、采用简单 MSE）\"的具体表述与实验对比，我"}
+
+data: {"type": "delta", "text": "无法从库内证据确认，如需请补充该文献。"}
+
+data: {"type": "done", "loops": 3}
+

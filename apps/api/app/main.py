@@ -265,6 +265,26 @@ def citation_graph() -> dict:
 
 
 # ----------------------------------------------------------------------
+# Agent chat: Task Planning + function calling over the library
+class AgentRequest(BaseModel):
+    question: str
+
+
+@app.post("/api/agent/chat")
+def agent_chat(req: AgentRequest) -> StreamingResponse:
+    _wait_model()
+    from app import agent as agent_mod
+
+    ctx = {"retriever": retriever, "idx": idx}
+
+    def gen():
+        for ev in agent_mod.run_agent(req.question, ctx):
+            yield "data: " + _json.dumps(ev, ensure_ascii=False) + "\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ----------------------------------------------------------------------
 # static frontend (served at /); mount last so API routes take priority
 WEB_DIR = config.ROOT_DIR / "apps" / "web"
 if WEB_DIR.exists():

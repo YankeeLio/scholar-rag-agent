@@ -151,5 +151,41 @@
 4. 写作 Copilot 接口（六大模块之一）
 5. 部署文档与 README（评分"工程 10%"）
 
+---
+
+## Day 5（2026-11-05）
+
+### 完成项
+
+| 项 | 结果 |
+|---|---|
+| GitHub 仓库 | `YankeeLio/scholar-rag-agent`（Public），完整 git 历史已推送；README 重写为比赛正式版 |
+| Agent 编排层 | `agent.py`：DeepSeek function calling 实现 Task Planning，3 个工具（search_library / list_documents / get_citation_graph）；SSE 事件流（plan/tool_call/tool_result/delta/done） |
+
+### Day 5 重大事故（第二次 Chroma 索引损坏，教训升级）
+
+**事故经过**：
+1. 上午重启服务后 Agent 测试，search_library 触发 HNSW 加载失败（`Error loading hnsw index`）——和 Day4 同症状。
+2. 写 `rebuild_index.py` 从 sqlite 恢复：第一次跑 extract 出 921 块、embed 完成（70 分钟 CPU），但 add 时报 `Expected metadata to not contain the reserved key chroma:document`——sqlite 里混入了 Chroma 内部保留键。
+3. 修脚本过滤保留键后重跑，但此时旧 sqlite 已被 rmtree 删除（第一次脚本删的），新 sqlite 是空库 → extract 出 0 块 → embed 空列表 → add 空列表报错。
+4. **旧 sqlite（921 块文本）彻底丢失**，只能重新上传原始 PDF 重建。
+
+**根因**：Chroma 1.5.9 Windows 持久化对非正常电源关闭/强杀进程非常脆弱；HNSW 段文件是异步 compactor 写盘，关机后丢；sqlite 元数据虽在但向量本体在 HNSW 文件里，无法纯 sqlite 恢复。
+
+**升级铁律**：
+- **写入完成后必须等待 ≥30 秒再重启服务**，让 Chroma compactor 落盘；关机前先优雅停服务。
+- **服务运行期间绝不**用独立脚本打开 data/chroma；调试只走 HTTP API。
+- **绝不写脚本 rmtree data/chroma 后再恢复**——sqlite 里有原始块文本，删了就全没了。
+- embed 结果必须落盘缓存（`_embed_cache.npy`），防止崩溃重跑浪费 CPU 时间。
+- 恢复流程改为：从 pdf/ 原始测试集重新上传（走服务流程，不写独立恢复脚本）。
+
+### 待办
+
+- [ ] 教材 + v1_img 重传中（~20 分钟）
+- [ ] Agent 三意图验证（list_documents / search_library / get_citation_graph）
+- [ ] 前端 Agent tab 接入
+- [ ] 云服务器 11-14 前后购买
+
+
 
 

@@ -1,0 +1,16 @@
+data: {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
+
+data: {"type": "tool_call", "name": "list_documents", "args": {}}
+
+data: {"type": "tool_result", "name": "list_documents", "summary": "返回 2 项"}
+
+data: {"type": "delta", "text": "你的文献库目前有 2 篇文档：\n\n| 标题 | 块数 |\n|---|---|\n|"}
+
+data: {"type": "delta", "text": " Understanding Deep Learning | 893 |\n| A"}
+
+data: {"type": "delta", "text": "ttention Is All You Need | 28 |\n\n需要我进一步查"}
+
+data: {"type": "delta", "text": "看某篇的具体内容，或分析这两篇之间的引用关系吗？"}
+
+data: {"type": "done", "loops": 2}
+
