@@ -58,6 +58,21 @@ TOOLS: list[dict] = [
             "parameters": {"type": "object", "properties": {}},
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "compare_docs",
+            "description": "跨论文对比：对同一问题在每篇文档中分别检索证据，按来源分组返回。"
+                           "当用户问“这几篇论文在某个点上有什么异同/对比”时使用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "要对比的问题或主题"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -88,7 +103,23 @@ def _exec_tool(name: str, args: dict, ctx: dict) -> dict:
     if name == "get_citation_graph":
         from app.graph import build_graph
         g = build_graph(ctx["idx"])
-        return {"nodes": g["nodes"], "edges": g["edges"]}
+        return {"nodes": g["nodes"], "edges": g["edges"], "summary": g.get("summary", {})}
+
+    if name == "compare_docs":
+        # broad retrieval, then group by doc_id so the LLM sees per-source evidence
+        query = args.get("query", "")
+        hits = ctx["retriever"].search(query, top_k=10)
+        grouped: dict[str, dict] = {}
+        for h in hits:
+            m = h["metadata"]
+            did = m.get("doc_id", "?")
+            slot = grouped.setdefault(did, {"title": m.get("title", ""), "evidence": []})
+            slot["evidence"].append({
+                "section": m.get("section", ""),
+                "page": m.get("pages", ""),
+                "text": h["text"][:800],
+            })
+        return {"query": query, "by_doc": list(grouped.values())}
 
     return {"error": f"unknown tool: {name}"}
 

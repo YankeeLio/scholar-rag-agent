@@ -1,0 +1,148 @@
+data: {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
+
+data: {"type": "tool_call", "name": "compare_docs", "args": {"query": "注意力机制的定义与计算方式（Attention）"}}
+
+data: {"type": "tool_result", "name": "compare_docs", "summary": "返回 0 项"}
+
+data: {"type": "tool_call", "name": "list_documents", "args": {}}
+
+data: {"type": "tool_result", "name": "list_documents", "summary": "返回 2 项"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "Attention Is All You Need scaled dot-product attention query key value definition 3.2.1", "top_k": 8}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 8 项"}
+
+data: {"type": "delta", "text": "## 教材与 Attention 论文在注意力机制描述上的异同\n\n库内两篇文献："}
+
+data: {"type": "delta", "text": "《Understanding Deep Learning》（下称教材）与《Att"}
+
+data: {"type": "delta", "text": "ention Is All You Need》（下称论文）。\n\n### 一、共同"}
+
+data: {"type": "delta", "text": "点\n\n1. **核心定义一致**：两者都把注意力描述为“查询（query）与一组"}
+
+data: {"type": "delta", "text": "键值对（key-value）映射到输出”的加权求和，权重由 query 与 ke"}
+
+data: {"type": "delta", "text": "y 的相容性函数决定。\n   - 论文：“An attention functi"}
+
+data: {"type": "delta", "text": "on can be described as mapping a query a"}
+
+data: {"type": "delta", "text": "nd a set of key-value pairs to an output"}
+
+data: {"type": "delta", "text": "... The output is computed as a weighted"}
+
+data: {"type": "delta", "text": " sum of the values, where the weight ass"}
+
+data: {"type": "delta", "text": "igned to each value is computed by a com"}
+
+data: {"type": "delta", "text": "patibility function of the query with th"}
+
+data: {"type": "delta", "text": "e corresponding key.”（《Attention Is All "}
+
+data: {"type": "delta", "text": "You Need》§3.2）\n   - 教材：第 n 个输出是所有输入经同一线性"}
+
+data: {"type": "delta", "text": "变换得到的 value 的加权和，权重为正且和为 1，取决于输入间的相似度（《U"}
+
+data: {"type": "delta", "text": "nderstanding Deep Learning》§12.2.3）\n\n2. "}
+
+data: {"type": "delta", "text": "**都用点积 + softmax 计算权重**：教材给出 a[x_m, x_n]"}
+
+data: {"type": "delta", "text": " = softmax_m(k_mᵀq_n)（§12.2.2，式 12.5）；论文"}
+
+data: {"type": "delta", "text": "的 Scaled Dot-Product Attention 结构图同样为 Ma"}
+
+data: {"type": "delta", "text": "tMul → Scale → SoftMax（§3.2.1，Figure 2）。"}
+
+data: {"type": "delta", "text": "\n\n3. **都解释了缩放（scaling）的必要性**：点积数值过大时，sof"}
+
+data: {"type": "delta", "text": "tmax 会进入最大项主导的区域，梯度极小、难以训练，因此除以 √d_k。\n  "}
+
+data: {"type": "delta", "text": " - 论文：“We suspect this to be caused by t"}
+
+data: {"type": "delta", "text": "he dot products growing too large in mag"}
+
+data: {"type": "delta", "text": "nitude to result in useful gradients aft"}
+
+data: {"type": "delta", "text": "er applying the softmax function.”（§3.2."}
+
+data: {"type": "delta", "text": "1）\n   - 教材：“The dot products in the atte"}
+
+data: {"type": "delta", "text": "ntion computation can have large magnitu"}
+
+data: {"type": "delta", "text": "des and move the arguments to the softma"}
+
+data: {"type": "delta", "text": "x function into a region where the large"}
+
+data: {"type": "delta", "text": "st value completely dominates... making "}
+
+data: {"type": "delta", "text": "the model difficult to train.”（§12.3.2）\n"}
+
+data: {"type": "delta", "text": "\n4. **都包含多头注意力**：论文给出 Multi-Head Attenti"}
+
+data: {"type": "delta", "text": "on 的并行结构（§3.2.2，Figure 2 右）；教材给出公式 MhSa["}
+
+data: {"type": "delta", "text": "X] = Ω_c[Sa₁[X]ᵀ, …, Sa_H[X]ᵀ]ᵀ（式 12.12）"}
+
+data: {"type": "delta", "text": "，并指出“Multiple heads seem to be necessary"}
+
+data: {"type": "delta", "text": " to make self-attention work well”（§12.3"}
+
+data: {"type": "delta", "text": "）。\n\n### 二、差异\n\n| 维度 | 教材 | 论文 |\n|---|---|"}
+
+data: {"type": "delta", "text": "---|\n| 定位 | 教学式推导：从“参数共享 + 依赖输入的连接”两条需求出"}
+
+data: {"type": "delta", "text": "发，逐步引出点积自注意力（§12.2 开头） | 直接给出注意力函数定义与具体实"}
+
+data: {"type": "delta", "text": "现（§3.2） |\n| 记号与形式 | 逐元素形式 a[x_m,x_n] 与矩阵"}
+
+data: {"type": "delta", "text": "形式 Sa[X] = V[X]·Softmax[K[X]ᵀQ[X]]（式 12."}
+
+data: {"type": "delta", "text": "7），并强调偏置项 β 与 1 向量 | 以 Q/K/V 矩阵与 √d_k 缩放"}
+
+data: {"type": "delta", "text": "为核心，偏置未强调 |\n| 与其他注意力变体的比较 | 未系统比较加性注意力 |"}
+
+data: {"type": "delta", "text": " 明确对比 additive attention 与 dot-product a"}
+
+data: {"type": "delta", "text": "ttention：理论复杂度相近，但点积在实践中更快、更省空间；d_k 较大时未"}
+
+data: {"type": "delta", "text": "缩放的加性注意力更优（§3.2.1） |\n| 机制解释 | 用信息检索的类比解释"}
+
+data: {"type": "delta", "text": " query/key 命名，并指出该机制是 hypernetwork 的特例、注"}
+
+data: {"type": "delta", "text": "意力矩阵相当于稀疏层权重（§12.2、Notes） | 不做此类概念性解读 |\n"}
+
+data: {"type": "delta", "text": "| 覆盖范围 | 额外讨论相对/绝对位置编码、稀疏与低秩注意力（local at"}
+
+data: {"type": "delta", "text": "tention、LinFormer）、squeeze-and-excitatio"}
+
+data: {"type": "delta", "text": "n 等扩展（§12.3、Notes） | 聚焦 Transformer 架构本身"}
+
+data: {"type": "delta", "text": "：编码器-解码器、masked 多头注意力、位置编码（§3.1、§3.2.3） "}
+
+data: {"type": "delta", "text": "|\n| 交叉注意力表述 | 明确使用 “encoder-decoder atte"}
+
+data: {"type": "delta", "text": "ntion / cross-attention” 术语，query 来自解码器、"}
+
+data: {"type": "delta", "text": "key/value 来自编码器（§12.8） | 以 masked multi-"}
+
+data: {"type": "delta", "text": "head attention 与 encoder-decoder attenti"}
+
+data: {"type": "delta", "text": "on 子层的形式呈现（Figure 1） |\n\n### 三、小结\n\n两者在**数"}
+
+data: {"type": "delta", "text": "学本质**（query-key 相容性加权求和、点积+softmax、√d_k "}
+
+data: {"type": "delta", "text": "缩放、多头并行）上高度一致，教材的公式与论文的算法可视为同一机制的两种表述。差异"}
+
+data: {"type": "delta", "text": "主要在**叙述目的与覆盖面**：论文是提出该架构的原始文献，侧重实现细节与工程权"}
+
+data: {"type": "delta", "text": "衡（速度、空间、与加性注意力的对比）；教材是教学性整理，侧重动机推导、矩阵化表达"}
+
+data: {"type": "delta", "text": "、概念类比以及对后续变体的综述。\n\n> 说明：库内《Attention Is A"}
+
+data: {"type": "delta", "text": "ll You Need》仅 28 个文本块，检索到的内容集中在 §3.2 及 F"}
+
+data: {"type": "delta", "text": "igure 1–2 附近，其 §3.2.2 多头注意力的公式细节与 §3.2.3"}
+
+data: {"type": "delta", "text": " 位置编码正文未直接命中，上述相关表述以结构图与教材对应内容为依据。"}
+
+data: {"type": "done", "loops": 3}
+
