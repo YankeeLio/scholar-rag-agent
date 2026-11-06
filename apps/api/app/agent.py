@@ -73,6 +73,23 @@ TOOLS: list[dict] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "fetch_arxiv",
+            "description": "从 arXiv 公开 API 检索相关论文（标题、摘要、作者、链接）。"
+                           "当用户问“推荐相关文献、最近有什么进展、这个方向还有哪些论文”时使用。"
+                           "用于外部文献推荐，不依赖本地库。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "检索关键词或主题，建议用英文术语"},
+                    "max_results": {"type": "integer", "description": "返回条数，默认 5", "default": 5},
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -120,6 +137,40 @@ def _exec_tool(name: str, args: dict, ctx: dict) -> dict:
                 "text": h["text"][:800],
             })
         return {"query": query, "by_doc": list(grouped.values())}
+
+    if name == "fetch_arxiv":
+        import urllib.request
+        import urllib.parse
+        import xml.etree.ElementTree as ET
+        query = args.get("query", "")
+        max_r = int(args.get("max_results", 5))
+        url = ("http://export.arxiv.org/api/query?"
+               + urllib.parse.urlencode({
+                   "search_query": f"all:{query}",
+                   "start": 0,
+                   "max_results": max_r,
+                   "sortBy": "relevance",
+               }))
+        req = urllib.request.Request(url, headers={"User-Agent": "ScholarRAG/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            xml_text = resp.read().decode("utf-8")
+        ns = {"a": "http://www.w3.org/2005/Atom"}
+        root = ET.fromstring(xml_text)
+        papers = []
+        for entry in root.findall("a:entry", ns):
+            title = (entry.find("a:title", ns).text or "").strip().replace("\n", " ")
+            summary = (entry.find("a:summary", ns).text or "").strip().replace("\n", " ")
+            authors = [a.find("a:name", ns).text for a in entry.findall("a:author", ns)]
+            link = entry.find("a:id", ns).text.strip()
+            published = (entry.find("a:published", ns).text or "")[:10]
+            papers.append({
+                "title": title,
+                "authors": authors[:3],
+                "published": published,
+                "summary": summary[:500],
+                "url": link,
+            })
+        return {"query": query, "papers": papers, "count": len(papers)}
 
     return {"error": f"unknown tool: {name}"}
 

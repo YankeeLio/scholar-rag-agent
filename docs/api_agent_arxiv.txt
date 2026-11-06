@@ -1,0 +1,90 @@
+data: {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
+
+data: {"type": "tool_call", "name": "fetch_arxiv", "args": {"query": "diffusion models", "max_results": 8}}
+
+data: {"type": "tool_result", "name": "fetch_arxiv", "summary": "返回 8 项"}
+
+data: {"type": "delta", "text": "以下是 arXiv 上检索到的扩散模型相关论文，按主题整理：\n\n## 综述与教程"}
+
+data: {"type": "delta", "text": "（适合入门/系统梳理）\n\n1. **A Tutorial on Diffusio"}
+
+data: {"type": "delta", "text": "n Theory: From Differential Equations to"}
+
+data: {"type": "delta", "text": " Diffusion Models**（2026-05）\n   Jiayi Fu"}
+
+data: {"type": "delta", "text": ", Yuxia Wang。从微分方程视角统一讲解扩散概率模型、score-bas"}
+
+data: {"type": "delta", "text": "ed 建模、SDE 与数值采样，自洽且自成体系。适合想打牢数学基础的人。\n   "}
+
+data: {"type": "delta", "text": "http://arxiv.org/abs/2605.22586v3\n\n2. **"}
+
+data: {"type": "delta", "text": "Video Diffusion Models: A Survey**（2024-"}
+
+data: {"type": "delta", "text": "05）\n   Andrew Melnik 等。系统梳理视频扩散模型的架构设计、时"}
+
+data: {"type": "delta", "text": "序动态建模与应用。\n   http://arxiv.org/abs/2405.0"}
+
+data: {"type": "delta", "text": "3150v2\n\n3. **Controllable Generation wit"}
+
+data: {"type": "delta", "text": "h Text-to-Image Diffusion Models: A Surv"}
+
+data: {"type": "delta", "text": "ey**（2024-03）\n   Pu Cao 等。聚焦文本到图像扩散模型的可控"}
+
+data: {"type": "delta", "text": "生成，讨论文本之外的各种条件控制方法。\n   http://arxiv.org/"}
+
+data: {"type": "delta", "text": "abs/2403.04279v2\n\n## 方法/理论类新工作\n\n4. **Ant"}
+
+data: {"type": "delta", "text": "ithetic Noise in Diffusion Models**（2025"}
+
+data: {"type": "delta", "text": "-06）\n   Jing Jia 等。研究\"对偶初始噪声\"（每个噪声样本与其取负"}
+
+data: {"type": "delta", "text": "配对）会产生强负相关，并提出\"对称性猜想\"解释学习到的 score 函数近似对称"}
+
+data: {"type": "delta", "text": "。跨数据集、架构、条件/无条件采样均成立，也适用于 VAE 与 Normaliz"}
+
+data: {"type": "delta", "text": "ing Flow。\n   http://arxiv.org/abs/2506.0"}
+
+data: {"type": "delta", "text": "6185v2\n\n5. **Fixed Point Diffusion Model"}
+
+data: {"type": "delta", "text": "s**（2024-01）\n   Xingjian Bai, Luke Melas"}
+
+data: {"type": "delta", "text": "-Kyriazi。把隐式不动点求解层嵌入去噪网络，将扩散过程转化为一系列相关的不"}
+
+data: {"type": "delta", "text": "动点问题，配合新的随机训练方法显著缩小模型规模。\n   http://arxiv"}
+
+data: {"type": "delta", "text": ".org/abs/2401.08741v1\n\n6. **Generalized "}
+
+data: {"type": "delta", "text": "Contrastive Divergence**（2023-12）\n   San"}
+
+data: {"type": "delta", "text": "gwoong Yoon 等。将 EBM 与扩散模型（作为可训练采样器）的联合训练"}
+
+data: {"type": "delta", "text": "表述为极小极大问题，推广了经典 Contrastive Divergence。\n"}
+
+data: {"type": "delta", "text": "   http://arxiv.org/abs/2312.03397v1\n\n##"}
+
+data: {"type": "delta", "text": " 应用类\n\n7. **LDM3D-VR: Latent Diffusion Mo"}
+
+data: {"type": "delta", "text": "del for 3D VR**（2023-11）\n   面向 VR 的潜扩散模型"}
+
+data: {"type": "delta", "text": "套件（LDM3D-pano、LDM3D-SR），支持文本提示生成全景 RGBD "}
+
+data: {"type": "delta", "text": "及低分辨率到高分辨率 RGBD 的上采样。\n   http://arxiv.or"}
+
+data: {"type": "delta", "text": "g/abs/2311.03226v1\n\n---\n\n**几点说明：**\n- 检索结"}
+
+data: {"type": "delta", "text": "果中混入了一篇无关文献（*Diffusion in LanCoIn3n+2 ph"}
+
+data: {"type": "delta", "text": "ases*，2011 年，讲的是材料中的原子扩散），已剔除。\n- 严格意义上\"最"}
+
+data: {"type": "delta", "text": "新\"的只有第 1 篇（2026-05）和第 4 篇（2025-06），其余多为 "}
+
+data: {"type": "delta", "text": "2023–2024 年。如果你想要更聚焦的近期进展，可以告诉我具体方向（如视频生"}
+
+data: {"type": "delta", "text": "成、可控生成、采样加速、3D/4D 生成），我再做一轮更精准的检索。\n- 另外，"}
+
+data: {"type": "delta", "text": "如果你希望推荐与你**本地文献库**相关的论文，我也可以先看看库里有哪些文献，再"}
+
+data: {"type": "delta", "text": "做针对性补充。"}
+
+data: {"type": "done", "loops": 2}
+
