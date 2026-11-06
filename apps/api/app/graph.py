@@ -59,10 +59,40 @@ def build_graph(idx: VectorIndex) -> dict:
             if f" {t} " in f" {text} " or f" {t}." in f" {text} ":
                 edges.append({"source": did, "target": target})
 
+    # ---- graph mining: centrality / cornerstones / peripheral ----
+    import networkx as nx
+    G = nx.DiGraph()
+    for did, info in docs.items():
+        G.add_node(did)
+    for e in edges:
+        G.add_edge(e["source"], e["target"])
+
+    pagerank = nx.pagerank(G, alpha=0.85)
+    nodes_out = []
+    for did, info in docs.items():
+        nodes_out.append({
+            "id": did,
+            "title": info["title"],
+            "chunks": info["chunks"],
+            "in_degree": G.in_degree(did),      # 被引用次数（基石指标）
+            "out_degree": G.out_degree(did),    # 引用他人次数
+            "pagerank": round(pagerank.get(did, 0.0), 4),
+        })
+
+    # cornerstones: most cited (highest in-degree); tie-break by pagerank
+    cornerstones = sorted(nodes_out,
+                          key=lambda n: (-n["in_degree"], -n["pagerank"]))
+    # peripheral: cites others but is rarely cited (edge/derivative)
+    peripheral = sorted(nodes_out,
+                       key=lambda n: (-n["out_degree"], n["in_degree"]))
+
     return {
-        "nodes": [
-            {"id": d["id"], "title": d["title"], "chunks": d["chunks"]}
-            for d in docs.values()
-        ],
+        "nodes": nodes_out,
         "edges": edges,
+        "summary": {
+            "node_count": len(nodes_out),
+            "edge_count": len(edges),
+            "cornerstones": [n["title"] for n in cornerstones if n["in_degree"] > 0][:5],
+            "peripheral": [n["title"] for n in peripheral if n["out_degree"] > 0][:5],
+        },
     }

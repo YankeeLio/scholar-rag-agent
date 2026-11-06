@@ -100,6 +100,7 @@
   <section>
     <div class="tabbar">
       <button class="tab active" id="tab-qa" onclick="switchTab('qa')">💬 溯源问答</button>
+      <button class="tab" id="tab-agent" onclick="switchTab('agent')">🤖 Agent</button>
       <button class="tab" id="tab-graph" onclick="switchTab('graph')">🕸️ 引用图谱</button>
     </div>
     <div class="chat-head">💬 溯源问答（回答带引用锚点，点击可查看原文证据）</div>
@@ -114,6 +115,23 @@
     <div class="input-row">
       <input id="question" placeholder="输入科研问题…（回车发送）">
       <button id="ask-btn">发送</button>
+    </div>
+    <div id="agent-panel" style="display:none;flex:1;flex-direction:column;min-height:0;background:var(--panel)">
+      <div class="chat-head">🤖 Agent 模式（自主规划 + 工具调用，左侧为思考轨迹）</div>
+      <div id="agent-body" style="flex:1;display:flex;min-height:0">
+        <div id="agent-trace" style="width:280px;border-right:1px solid var(--line);overflow-y:auto;padding:10px 14px;font-size:12px;line-height:1.6;color:var(--muted)"></div>
+        <div id="agent-chat" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <div class="msg bot" style="align-self:flex-start;background:var(--bg);border:1px solid var(--line)">
+            我是 Agent 科研助手。我会自主决定调用哪些工具（检索文献 / 列出库内文档 / 查看引用图谱），
+            多轮检索后给出带证据的回答。试试问我：<br>
+            <span class="thinking">“我库里有哪些文献？”<br>“扩散模型的训练目标是什么？”<br>“帮我分析一下这几篇论文之间的引用关系”</span>
+          </div>
+        </div>
+      </div>
+      <div class="input-row">
+        <input id="agent-question" placeholder="让 Agent 自主规划任务…（回车发送）">
+        <button id="agent-btn">发送</button>
+      </div>
     </div>
     <div id="graph-panel">
       <div class="chat-head">🕸️ 引用图谱（库内文档之间的引用关系）</div>
@@ -299,17 +317,93 @@ $("#question").addEventListener("keydown", (e) => { if (e.key === "Enter") ask()
 
 /* ---------- citation graph tab ---------- */
 function switchTab(name) {
-  const qa = name === "qa";
-  $("#tab-qa").className = "tab " + (qa ? "active" : "");
-  $("#tab-graph").className = "tab " + (!qa ? "active" : "");
-  const qaArea = document.querySelector("section .chat-head + *");
-  // toggle the panels below the tabbar
-  document.querySelectorAll("section > .chat-head, section > #chat, section > .suggest, section > #ev-panel, section > .input-row")
-    .forEach(el => el.style.display = qa ? "" : "none");
+  ["qa", "agent", "graph"].forEach(t => {
+    $("#tab-" + t).className = "tab " + (t === name ? "active" : "");
+  });
+  // qa panel pieces
+  const qaPieces = document.querySelectorAll("section > .chat-head, section > #chat, section > .suggest, section > #ev-panel, section > .input-row");
+  qaPieces.forEach(el => el.style.display = (name === "qa") ? "" : "none");
+  // agent panel
+  $("#agent-panel").style.display = (name === "agent") ? "flex" : "none";
+  // graph panel
   const gp = $("#graph-panel");
-  gp.style.display = qa ? "none" : "flex";
-  if (!qa) loadGraph();
+  gp.style.display = (name === "graph") ? "flex" : "none";
+  if (name === "graph") loadGraph();
 }
+
+/* ---------- agent mode ---------- */
+async function askAgent() {
+  const q = $("#agent-question").value.trim();
+  if (!q) return;
+  $("#agent-btn").disabled = true;
+  const trace = $("#agent-trace");
+  const chat = $("#agent-chat");
+  trace.innerHTML = "";
+  chat.appendChild(msgEl("user", q));
+  $("#agent-question").value = "";
+  const bot = document.createElement("div");
+  bot.className = "msg bot";
+  bot.style.cssText = "align-self:flex-start;background:var(--bg);border:1px solid var(--line);white-space:pre-wrap";
+  bot.classList.add("typing");
+  bot.textContent = "（思考中…）";
+  chat.appendChild(bot);
+
+  const traceLine = (html) => {
+    const d = document.createElement("div");
+    d.innerHTML = html;
+    d.style.marginBottom = "6px";
+    trace.appendChild(d);
+    trace.scrollTop = trace.scrollHeight;
+  };
+  try {
+    const r = await fetch(API + "/api/agent/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q }),
+    });
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "", started = false;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const block = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const line = block.split("\n").find(l => l.startsWith("data: "));
+        if (!line) continue;
+        const ev = JSON.parse(line.slice(6));
+        if (ev.type === "plan") {
+          traceLine(`🧭 <b>规划</b>：${esc(ev.text)}`);
+        } else if (ev.type === "tool_call") {
+          const args = JSON.stringify(ev.args || {});
+          traceLine(`🔧 <b>调用工具</b> ${esc(ev.name)}<br><span style="color:#888">${esc(args)}</span>`);
+          if (!started) { bot.textContent = ""; started = true; }
+        } else if (ev.type === "tool_result") {
+          traceLine(`✅ <b>结果</b> ${esc(ev.name)} → ${esc(ev.summary || "")}`);
+        } else if (ev.type === "delta") {
+          if (!started) { bot.textContent = ""; started = true; }
+          bot.textContent += ev.text;
+          chat.scrollTop = chat.scrollHeight;
+        } else if (ev.type === "done") {
+          traceLine(`🏁 <b>完成</b>（${ev.loops} 轮工具调用）`);
+          bot.classList.remove("typing");
+        } else if (ev.type === "error") {
+          bot.textContent = "⚠️ " + (ev.message || "出错");
+        }
+      }
+    }
+    if (!started) bot.textContent = "（Agent 未生成回答）";
+    bot.classList.remove("typing");
+  } catch (e) {
+    bot.textContent = "⚠️ 请求出错：" + e.message;
+  } finally {
+    $("#agent-btn").disabled = false;
+  }
+}
+$("#agent-btn").addEventListener("click", askAgent);
+$("#agent-question").addEventListener("keydown", (e) => { if (e.key === "Enter") askAgent(); });
 async function loadGraph() {
   const canvas = $("#graph-canvas");
   canvas.innerHTML = '<span class="thinking">加载引用图谱…</span>';
