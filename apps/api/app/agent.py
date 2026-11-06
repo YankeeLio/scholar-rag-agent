@@ -188,7 +188,7 @@ def run_agent(question: str, ctx: dict) -> Iterator[dict]:
     ]
     yield {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
 
-    max_loops = 3
+    max_loops = 5
     for loop in range(max_loops):
         resp = client.chat.completions.create(
             model=config.LLM_CHAT_MODEL,

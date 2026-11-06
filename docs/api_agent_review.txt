@@ -1,0 +1,196 @@
+data: {"type": "plan", "text": "正在分析你的问题，决定需要调用哪些工具…"}
+
+data: {"type": "tool_call", "name": "list_documents", "args": {}}
+
+data: {"type": "tool_result", "name": "list_documents", "summary": "返回 2 项"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "扩散模型 去噪扩散概率模型 发展脉络 核心方法", "top_k": 8}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 8 项"}
+
+data: {"type": "tool_call", "name": "search_library", "args": {"query": "diffusion model conditioning classifier guidance text-to-image latent diffusion speed up sampling", "top_k": 8}}
+
+data: {"type": "tool_result", "name": "search_library", "summary": "返回 8 项"}
+
+data: {"type": "tool_call", "name": "fetch_arxiv", "args": {"query": "diffusion models survey advances future directions", "max_results": 8}}
+
+data: {"type": "tool_result", "name": "fetch_arxiv", "summary": "返回 8 项"}
+
+data: {"type": "delta", "text": "# 扩散模型研究综述\n\n> **说明**：以下综述以你文献库中的《Underst"}
+
+data: {"type": "delta", "text": "anding Deep Learning》第 18 章为主要依据（该章系统覆盖了"}
+
+data: {"type": "delta", "text": "扩散模型的原理、损失重参数化、条件生成与加速），并结合外部 arXiv 检索到的"}
+
+data: {"type": "delta", "text": "综述文献补充发展脉络与未来方向。库内另一篇文档《Attention Is All"}
+
+data: {"type": "delta", "text": " You Need》与扩散模型无直接关系，未纳入。\n\n---\n\n## 一、发展脉"}
+
+data: {"type": "delta", "text": "络\n\n**1. 从层级 VAE 到扩散模型**\n扩散模型可视为**层级变分自编码"}
+
+data: {"type": "delta", "text": "器（hierarchical VAE）的特例**：编码器固定、隐空间与数据同尺寸"}
+
+data: {"type": "delta", "text": "。教材在第 17 章末尾即预告\"下一章讨论扩散模型，它能生成极高质量样本，可看作"}
+
+data: {"type": "delta", "text": "层级 VAE\"（《Understanding Deep Learning》§17"}
+
+data: {"type": "delta", "text": ".9）。其与归一化流、score matching、随机微分方程（SDE）也有紧"}
+
+data: {"type": "delta", "text": "密联系；Song et al. (2021c) 提出的 SDE 框架统一了去噪与"}
+
+data: {"type": "delta", "text": " score matching 两种解释（《Understanding Deep"}
+
+data: {"type": "delta", "text": " Learning》§18 Notes）。\n\n**2. 关键方法演进节点**（据"}
+
+data: {"type": "delta", "text": "教材 Notes 与 §18.6）\n- **DDPM 式随机扩散**：逐步加噪至"}
+
+data: {"type": "delta", "text": "白噪声，再学习反向去噪。\n- **DDIM（确定性形式）**：同一训练好的模型兼"}
+
+data: {"type": "delta", "text": "容确定性采样，不每步加噪，少步采样效果好（§18.6 图注）。\n- **加速采样"}
+
+data: {"type": "delta", "text": "**：利用概率流 ODE 求解技术（Vahdat et al. 2021；Xia"}
+
+data: {"type": "delta", "text": "o et al. 2022b；Karras et al. 2022 优化时间离散"}
+
+data: {"type": "delta", "text": "化与采样器调度），显著降低采样步数（§18 Notes）。\n- **蒸馏**：S"}
+
+data: {"type": "delta", "text": "alimans & Ho (2022) 把相邻去噪步蒸馏为单步以提速（§18 N"}
+
+data: {"type": "delta", "text": "otes）。\n- **潜空间扩散（Stable Diffusion）**：Rom"}
+
+data: {"type": "delta", "text": "bach et al. (2022) 用自编码器把数据投影到更小潜空间再扩散，降"}
+
+data: {"type": "delta", "text": "低维度、加速训练与采样（§18 Notes）。\n- **条件生成**：分类器引导"}
+
+data: {"type": "delta", "text": " → 无分类器引导 → 文本/图像条件 → ControlNet 类结构控制（§"}
+
+data: {"type": "delta", "text": "18.6、§18 Notes）。\n\n**3. 外部综述对脉络的划分**\nYang"}
+
+data: {"type": "delta", "text": " et al. (2022)《Diffusion Models: A Compr"}
+
+data: {"type": "delta", "text": "ehensive Survey of Methods and Applicati"}
+
+data: {"type": "delta", "text": "ons》将研究归为三大方向：**高效采样、似然估计改进、特殊结构数据处理**，并"}
+
+data: {"type": "delta", "text": "讨论与其他生成范式的结合（arXiv:2209.00796）。后续专题综述进一步"}
+
+data: {"type": "delta", "text": "分化：文本到图像（arXiv:2303.07909）、可控生成（arXiv:24"}
+
+data: {"type": "delta", "text": "03.04279）、视频扩散（arXiv:2405.03150）、扩散模型与表征"}
+
+data: {"type": "delta", "text": "学习（arXiv:2407.00783）。\n\n---\n\n## 二、核心方法\n\n*"}
+
+data: {"type": "delta", "text": "*1. 前向加噪与反向去噪**\n数据经一系列隐变量反复与随机噪声混合，足够多步后"}
+
+data: {"type": "delta", "text": "与白噪声不可区分；因每步很小，反向去噪每步可近似为高斯分布，由深度网络预测（《U"}
+
+data: {"type": "delta", "text": "nderstanding Deep Learning》§18.7）。前向过程写作"}
+
+data: {"type": "delta", "text": " z_t = √ᾱ_t·x + √(1−ᾱ_t)·ε（式 18.30）。\n\n**"}
+
+data: {"type": "delta", "text": "2. 损失函数：ELBO → 简单最小二乘**\n损失基于证据下界（ELBO），最"}
+
+data: {"type": "delta", "text": "终化为简单的**最小二乘形式**（§18.7）。\n\n**3. 损失重参数化（关键"}
+
+data: {"type": "delta", "text": "工程要点）**\n原始参数化可用但效果较差，改为让模型**直接预测混入的噪声 ε*"}
+
+data: {"type": "delta", "text": "*（§18.5）。教材分两部分讨论：目标重参数化（§18.5.1，把式 18.2"}
+
+data: {"type": "delta", "text": "8 中的数据项 x 用 z_t 与 ε 表示，见式 18.31–18.32）与网"}
+
+data: {"type": "delta", "text": "络重参数化（§18.5.2）。\n\n**4. 网络架构**\n图像生成中每个去噪步用"}
+
+data: {"type": "delta", "text": " **U-Net** 实现；时间步以时间嵌入注入各层（§18.7、§18 Not"}
+
+data: {"type": "delta", "text": "es 图 18.9）。\n\n**5. 条件生成**\n- **分类器引导**：在更新"}
+
+data: {"type": "delta", "text": "式中加入 σ_t²·∂log Pr(c|z_t)/∂z_t 项，分类器复用 U-"}
+
+data: {"type": "delta", "text": "Net 下采样特征、跨时间步共享（式 18.41，§18.6）。\n- **无分类"}
+
+data: {"type": "delta", "text": "器引导**：不训练单独分类器，训练时以一定比例丢弃类别信息（类似 dropout"}
+
+data: {"type": "delta", "text": "），推理时可调节条件/无条件分量权重；过度加权条件分量会使样本更典型、更真实（§"}
+
+data: {"type": "delta", "text": "18 Notes）。\n- **图像条件**：把缩放后的图像拼接到 U-Net 各"}
+
+data: {"type": "delta", "text": "层（如 Ho et al. 2022a 的级联超分）；**文本条件**：文本嵌入"}
+
+data: {"type": "delta", "text": "线性变换到与 U-Net 层同尺寸后，像时间嵌入一样相加（§18 Notes）。"}
+
+data: {"type": "delta", "text": "\n- **结构控制**：用 control network 微调预训练模型以支持"}
+
+data: {"type": "delta", "text": "边缘图、关节位置、分割图、深度图等条件（Zhang & Agrawala, 20"}
+
+data: {"type": "delta", "text": "23，§18 Notes）。\n\n**6. 效率与似然**\n似然可通过转为 ODE"}
+
+data: {"type": "delta", "text": " 或训练连续归一化流计算；Kingma et al. (2021) 表明其下界优"}
+
+data: {"type": "delta", "text": "于归一化流与自回归模型在测试数据上的精确对数似然（§18 Notes）。\n\n--"}
+
+data: {"type": "delta", "text": "-\n\n## 三、未来方向\n\n**1. 采样加速仍是主线**\n教材明确指出采样慢是"}
+
+data: {"type": "delta", "text": "主要缺点（每步 U-Net、需很多小步以保证后验近似高斯）。两条思路：① 用更复"}
+
+data: {"type": "delta", "text": "杂分布描述每步去噪（条件 GAN、条件能量模型），从而减少步数；② 蒸馏合并步数"}
+
+data: {"type": "delta", "text": "；③ 潜空间扩散降维（§18 Notes、§18.7）。\n\n**2. 可控性与多"}
+
+data: {"type": "delta", "text": "条件生成**\n文本单一条件不足以满足复杂需求，可控 T2I 是活跃方向（arXi"}
+
+data: {"type": "delta", "text": "v:2403.04279）；ControlNet 式结构控制已展示可扩展性（§1"}
+
+data: {"type": "delta", "text": "8 Notes）。\n\n**3. 向图像之外扩展**\n视频生成（时序一致性建模，a"}
+
+data: {"type": "delta", "text": "rXiv:2405.03150）、分子设计等特殊结构数据（arXiv:2209."}
+
+data: {"type": "delta", "text": "00796）。\n\n**4. 与表征学习/自监督的融合**\n扩散训练不依赖标签，可"}
+
+data: {"type": "delta", "text": "视为自监督学习的一种独特实例（arXiv:2407.00783）。\n\n**5. "}
+
+data: {"type": "delta", "text": "理论统一与似然改进**\nSDE 框架统一去噪与 score matching；与"}
+
+data: {"type": "delta", "text": "归一化流、能量模型的联系仍待深化（§18 Notes；arXiv:2209.00"}
+
+data: {"type": "delta", "text": "796 的\"似然估计改进\"方向）。\n\n---\n\n## 参考文献\n\n**库内**\n"}
+
+data: {"type": "delta", "text": "- Prince, *Understanding Deep Learning*,"}
+
+data: {"type": "delta", "text": " §17.9、§18.5–18.7、§18 Notes（pp. 357–385）"}
+
+data: {"type": "delta", "text": "\n\n**外部（arXiv 检索）**\n- Yang et al., *Diffu"}
+
+data: {"type": "delta", "text": "sion Models: A Comprehensive Survey of M"}
+
+data: {"type": "delta", "text": "ethods and Applications*, arXiv:2209.007"}
+
+data: {"type": "delta", "text": "96\n- Zhang et al., *Text-to-image Diffus"}
+
+data: {"type": "delta", "text": "ion Models in Generative AI: A Survey*, "}
+
+data: {"type": "delta", "text": "arXiv:2303.07909\n- Cao et al., *Controll"}
+
+data: {"type": "delta", "text": "able Generation with Text-to-Image Diffu"}
+
+data: {"type": "delta", "text": "sion Models: A Survey*, arXiv:2403.04279"}
+
+data: {"type": "delta", "text": "\n- Melnik et al., *Video Diffusion Model"}
+
+data: {"type": "delta", "text": "s: A Survey*, arXiv:2405.03150\n- Fuest e"}
+
+data: {"type": "delta", "text": "t al., *Diffusion Models and Representat"}
+
+data: {"type": "delta", "text": "ion Learning: A Survey*, arXiv:2407.0078"}
+
+data: {"type": "delta", "text": "3\n\n---\n\n**两点提示**：\n1. 你库内只有一本教材覆盖扩散模型，**原"}
+
+data: {"type": "delta", "text": "始论文（DDPM、DDIM、Stable Diffusion、无分类器引导等）均"}
+
+data: {"type": "delta", "text": "未入库**，上述具体方法细节来自教材的转述与引用，若综述需精确引用原始文献，建议"}
+
+data: {"type": "delta", "text": "补充入库。\n2. 教材中\"§18.5.2 网络重参数化\"的具体内容我未检索到原文"}
+
+data: {"type": "delta", "text": "片段，如需该部分细节可再检索。"}
+
+data: {"type": "done", "loops": 3}
+
