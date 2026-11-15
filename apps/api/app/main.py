@@ -16,7 +16,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from app import config, dedup, llm
@@ -24,6 +24,7 @@ from app.chunker import Chunker
 from app.embedding import EmbeddingService
 from app.indexer import VectorIndex
 from app.parser import PdfParser
+from app.reader import PageReader
 from app.retriever import HybridRetriever
 
 # ----------------------------------------------------------------------
@@ -282,6 +283,79 @@ def agent_chat(req: AgentRequest) -> StreamingResponse:
             yield "data: " + _json.dumps(ev, ensure_ascii=False) + "\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ----------------------------------------------------------------------
+# linked reading: page image + page layout + academic translation
+page_reader = PageReader()
+
+
+def _doc_source(doc_id: str) -> str:
+    res = idx.collection.get(where={"doc_id": doc_id}, include=["metadatas"])
+    if not res["metadatas"]:
+        raise HTTPException(404, "document not found in index")
+    source = res["metadatas"][0]["source"]
+    if not Path(source).exists():
+        raise HTTPException(404, f"source pdf missing: {source}")
+    return source
+
+
+@app.get("/api/documents/{doc_id}/page/{page_no}/image")
+def page_image(doc_id: str, page_no: int, dpi: int = 144) -> Response:
+    src = _doc_source(doc_id)
+    try:
+        png = page_reader.render_page(src, page_no, dpi=dpi)
+    except IndexError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "max-age=3600"})
+
+
+@app.get("/api/documents/{doc_id}/page/{page_no}/layout")
+def page_layout(doc_id: str, page_no: int, ocr: bool = True) -> dict:
+    src = _doc_source(doc_id)
+    try:
+        layout = page_reader.page_layout(src, page_no)
+    except IndexError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    # scanned pages have no text layer: fall back to OCR so the linked-reading
+    # overlay still gets clickable line boxes
+    if ocr and not layout["lines"]:
+        try:
+            lines = _get_ocr().ocr_page_lines(src, page_no)
+            if lines:
+                layout["lines"] = lines
+                layout["ocr"] = True
+        except Exception as exc:  # OCR must never break the reader
+            layout["ocr_error"] = f"{type(exc).__name__}: {exc}"
+    return layout
+
+
+class TranslateRequest(BaseModel):
+    text: str
+    target_lang: str = "zh"
+    context: str = ""
+
+
+@app.post("/api/translate")
+def translate(req: TranslateRequest) -> dict:
+    if not config.LLM_API_KEY:
+        raise HTTPException(400, "DEEPSEEK_API_KEY 未配置，无法翻译")
+    text = (req.text or "").strip()
+    if not text:
+        raise HTTPException(400, "text 不能为空")
+    if len(text) > 4000:
+        text = text[:4000]
+    from app.translate import translate_text
+    try:
+        translation = translate_text(text, req.target_lang, req.context)
+    except Exception as exc:  # surface LLM failures as clean JSON errors
+        msg = str(exc)
+        if "Insufficient Balance" in msg or "402" in msg:
+            raise HTTPException(
+                402, "DeepSeek 账户余额不足，充值后再使用翻译功能") from exc
+        raise HTTPException(502, f"翻译服务调用失败：{msg[:200]}") from exc
+    return {"translation": translation, "target_lang": req.target_lang}
 
 
 # ----------------------------------------------------------------------

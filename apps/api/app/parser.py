@@ -256,7 +256,7 @@ class PdfParser:
             m = SECTION_NUM_RE.match(t)
             title_part = m.group(2).strip() if m else ""
             if (m and len(t) < 100
-                    and re.search(r"[A-Za-z]", title_part)
+                    and re.match(r"^[A-Za-z]", title_part)
                     and len(title_part) >= 3
                     and not title_part.endswith(".")):
                 sections.append(Section(

@@ -23,8 +23,11 @@
 | 文档解析 | PyMuPDF 行级解析（标题树 / 作者机构 / 摘要 / 表格 / 参考文献）；扫描件自动走 RapidOCR 通道；541 页教材按章节感知切块 |
 | 语义去重 | 块级余弦相似度聚合（阈值 0.85），识别同论文不同版本，触发预警并支持一键替换 |
 | 抗幻觉 RAG | Dense 0.6 + BM25 0.4 混合检索；Prompt 约束"只依据证据回答 / 数字必须与证据一致 / 用提问者语言"；流式输出 + 引用列表 |
-| 引用图谱 | 库内文档全文标题匹配建边，前端 ECharts 力导向可视化 |
-| Web 界面 | 文献库管理、上传-去重-替换、流式问答（SSE）、引用证据面板、图谱浏览，均由 FastAPI 单页托管 |
+| Agent 编排 | DeepSeek Function Calling 自主决策，5 个工具：库内检索、文献清单、引用图谱、跨论文对比、arXiv 外部推荐；最多 5 轮自主循环，SSE 实时推送思考轨迹（plan / tool_call / tool_result / delta） |
+| 引用图谱 | 库内文档全文标题匹配建边；NetworkX 计算入度 / 出度 / PageRank（α=0.85），自动识别**图论基石文献**（被引最多）与边缘文献，前端力导向可视化 |
+| 联动阅读 | 左右分栏：左侧 PDF 原图渲染（按需 DPI），右侧叠加**行级版面框**（bbox 归一化到 0..1，与渲染 DPI 解耦）；扫描件无文本层时自动走单页 OCR 补出版面框；点击任意行即出译文 |
+| 学术翻译 | 独立于 RAG 的翻译契约：只输出译文、术语按学科通用译法且全文一致、公式与引用编号原样保留、不确定译名保留英文不臆造；支持单行划词翻译与整页分批翻译 |
+| Web 界面 | 文献库管理、上传-去重-替换、流式问答（SSE）、Agent 思考轨迹、联动阅读、图谱浏览，均由 FastAPI 单页托管 |
 
 ## 技术架构
 
@@ -33,15 +36,32 @@
         │  HTTP / SSE
 FastAPI (apps/api/app/main.py)
    ├─ parser.py    行级结构化解析（章节树 / 参考文献 / 表格）
-   ├─ ocr.py       RapidOCR 扫描件通道（onnxruntime CPU）
+   ├─ ocr.py       RapidOCR 扫描件通道（onnxruntime CPU）+ 单页版面框
    ├─ chunker.py    章节感知切块（1800 字符上限，锚点定位）
    ├─ embedding.py 本地 BGE-M3（CPU，1024 维）
    ├─ indexer.py   Chroma 持久化向量库
    ├─ retriever.py 稠密 + BM25 混合检索（中文二元组分词）
    ├─ dedup.py      块级语义去重（avg pairwise cosine）
    ├─ llm.py        DeepSeek Chat 证据约束 RAG（非流式 + SSE）
-   └─ graph.py      引用关系图谱构建
+   ├─ agent.py      Function Calling 编排层（5 工具 / 5 轮循环 / SSE 事件流）
+   ├─ graph.py      引用关系图谱 + PageRank 基石文献挖掘
+   ├─ reader.py     页面渲染 + 行级版面（bbox 归一化，LRU 缓存 24 页）
+   └─ translate.py  学术翻译契约（术语一致 / 公式保留）
 ```
+
+## 接口一览
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/health` | 健康检查（模型加载状态 / 索引块数 / LLM 配置） |
+| GET | `/api/documents` | 文献清单（doc_id / 标题 / 块数） |
+| POST | `/api/documents/upload` | 上传 PDF，解析 → 切块 → 去重 → 入库 |
+| POST | `/api/qa`、`/api/qa/stream` | 证据约束问答（普通 / SSE 流式） |
+| POST | `/api/agent/chat` | Agent 自主编排（SSE：plan / tool_call / tool_result / delta / done） |
+| GET | `/api/graph` | 引用图谱 + PageRank 排序 + 基石文献 |
+| GET | `/api/documents/{doc_id}/page/{page_no}/image` | 页面原图渲染（`?dpi=`，默认 144） |
+| GET | `/api/documents/{doc_id}/page/{page_no}/layout` | 行级版面文本（bbox 归一化；扫描页自动 OCR 兜底） |
+| POST | `/api/translate` | 学术翻译（`text` / `target_lang` / `context`，上限 4000 字符） |
 
 - **后端**：Python 3.13 + FastAPI + Uvicorn
 - **Embedding**：BAAI/bge-m3（本地 CPU 推理，无需 GPU）

@@ -186,6 +186,73 @@
 - [ ] 前端 Agent tab 接入
 - [ ] 云服务器 11-14 前后购买
 
+---
+
+## Day 6（2026-11-15，距提交截止剩 3 天）
+
+### 状态核实（先查真相，不凭记忆）
+
+`git log` 显示最后一次提交是 11-06 的 `e0f83cc`，之后 9 天零提交；根目录无 Dockerfile、无 mp4、docs 下无 PDF；本地服务当时未运行。结论：**功能已够拿核心分，继续加功能的边际收益最低，必须转向交付**。按 3 天倒排：
+
+| 日期 | 任务 |
+|---|---|
+| 11-15 | 补最后 1 个功能（联动阅读）+ 技术文档 + README + Dockerfile |
+| 11-16 | 云服务器部署，拿到公网地址 |
+| 11-17 | 录演示视频（5–8 分钟 MP4 ≥1080p） |
+| 11-18 | 只做提交前检查（4 项材料齐全） |
+
+### 事故：venv 整体失效（Python 启动器找 base 失败）
+
+现象：启动服务报 `did not find executable at ...\sandbox_runtime\bases\772984f6fd3a8ae0ae7d2422cd7c2bfa\python\python.exe`。
+
+根因：环境切换后，旧沙箱 base 目录 `772984f6...` 已被清理，而 `apps/api/.venv/pyvenv.cfg` 的 `home` 仍指向它。Windows venv 的 `python.exe` 是启动器，按 pyvenv.cfg 找 base，所以**所有** python 调用都报"找不到 python"（表面像被权限拦截，实为配置失效）。
+
+修复：备份为 `pyvenv.cfg.bak`，把 home / executable / command 三项改指新 base `fa694f517e5995233c80a9a8db5212c2\python`，version 改为 3.13.18。3.13.16 → 3.13.18 同 minor 系列 ABI 兼容，`import torch/numpy/pymupdf/chromadb/fastapi/networkx` 全部通过，**无需重装依赖**。
+
+启动服务的正确姿势（记录备查）：必须**绝对路径 + `-WorkingDirectory`**，相对路径 `.\venv\Scripts\python.exe` 会因工作目录漂移而失败。
+
+```powershell
+Start-Process -FilePath "G:\竞赛\2026传智杯-豆包\apps\api\.venv\Scripts\python.exe" `
+  -ArgumentList "-m","uvicorn","app.main:app","--host","127.0.0.1","--port","8010" `
+  -WorkingDirectory "G:\竞赛\2026传智杯-豆包\apps\api" -WindowStyle Hidden `
+  -RedirectStandardOutput "docs\server.log" -RedirectStandardError "docs\server.err.log"
+```
+
+修复后 `/health` → `index_count=921`，索引未丢（教材 893 + 扫描件 28）。
+
+### 模块三：版式联动阅读 + 划词学术翻译
+
+| 文件 | 内容 |
+|---|---|
+| `reader.py`（新增） | `PageReader.render_page()` 用 PyMuPDF 按 DPI 渲染 PNG，LRU 缓存 24 页；`page_layout()` 遍历 blocks→lines→spans 拼行文本，**bbox 归一化到 0..1**（除以 page rect），与渲染 DPI 解耦 |
+| `reader.py` + `ocr.py` | 扫描件无文本层 → `layout` 返回 0 行 → 路由层自动调 `OcrEngine.ocr_page_lines()` 单页 OCR 补版面条（text + 归一化 bbox + score），异常只写 `ocr_error` 不抛出（**OCR 不能拖垮阅读器**） |
+| `translate.py`（新增） | 独立于 `llm.py` 的翻译契约：只输出译文 / 术语按学科通用译法且全文一致 / 公式与引用编号原样保留 / 保留段落编号层级 / 不确定译名保留英文不臆造；`temperature=0.1`，文献标题作为上下文做术语对齐 |
+| `main.py` | 三条路由：页面图、版面文本（带 OCR 兜底）、`POST /api/translate`（空文本 400、>4000 字符截断、LLM 异常转 402/502 的**干净 JSON**） |
+| `web/index.html` | 新增「联动阅读」tab：左栏原图 + 绝对定位 overlay（按 bbox 百分比建 div，点击即译）；右栏译文卡片；整页翻译按 1800 字符**分批**循环（受接口 4000 上限约束） |
+
+验证：教材 p1 → 文本层 11 行，首行 bbox `[0.2579,0.1976,0.6757,0.2194]`；扫描件 p1 → **OCR 55 行**，首行 "Attention Is All You Need" bbox `[0.3431,0.1255,0.6543,0.1457]`；浏览器实测 overlay 55 个框与页面文字**逐行对齐**，点击后右侧卡片正常弹出。
+
+### 踩坑
+
+1. **`if not <numpy array>` 必炸**：`ValueError: The truth value of an array with more than one element is ambiguous`。RapidOCR 的 boxes/scores 是 numpy 数组，必须改 `if boxes is None or len(boxes) == 0: return []`。
+2. **前端 `r.json()` 遇纯文本 500 会二次报错**（`Unexpected token 'I', "Internal S"...`），把真实错误盖住。改为先 `r.text()` 再容错 `JSON.parse`，后端同时把 LLM 异常统一转成 `{"detail": ...}`。
+3. **演示观感陷阱**：默认选中的是扫描件（块数少排在前），若不做 OCR 兜底，联动阅读会显示"识别 0 行"，看起来像坏了——这是必须补的功能缺陷，不是可选项。
+
+### 当前硬阻塞（非技术）
+
+**DeepSeek 账户余额为 0**：`POST /api/translate` 返回 `402 - Insufficient Balance`。这意味着 RAG 问答、Agent 编排、划词翻译三条演示主线**全部不可用**，必须充值后才能验证与演示。代码侧已把该错误转成可读中文提示，不会崩。
+
+### 待办（11-18 截止，剩 3 天）
+
+- [ ] DeepSeek 充值（未解决，阻塞三条演示主线）
+- [ ] 5 个改动文件提交 + 推送（`reader.py` / `translate.py` / `ocr.py` / `main.py` / `index.html`，另 `parser.py` 1 行修正）
+- [ ] 技术文档 PDF（≤30 页）
+- [ ] Dockerfile + 部署到云服务器（公网地址）
+- [ ] 演示视频 5–8 分钟 MP4 ≥1080p
+- [ ] README 补 Agent 编排 / 图论 / 联动阅读（本轮已补）
+- [ ] 模块六 写作 Copilot（0%，若时间不足则放弃，核心分已足够）
+
+
 
 
 

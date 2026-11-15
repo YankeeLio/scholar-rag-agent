@@ -40,6 +40,54 @@ class OcrEngine:
         return pages
 
     # ------------------------------------------------------------------
+    def ocr_page_lines(self, pdf_path, page_no: int, dpi: int = 200) -> list[dict]:
+        """OCR a single scanned page; returns [{text, bbox(normalized)}].
+
+        Used by the linked-reading view so scanned PDFs still get clickable
+        line boxes overlaid on the rendered page image.
+        """
+        import numpy as np
+        import pymupdf
+
+        with pymupdf.open(str(pdf_path)) as doc:
+            if page_no < 1 or page_no > doc.page_count:
+                raise IndexError(
+                    f"page {page_no} out of range 1..{doc.page_count}")
+            page = doc[page_no - 1]
+            pix = page.get_pixmap(dpi=dpi)
+            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(
+                pix.height, pix.width, pix.n)
+            w = float(pix.width) or 1.0
+            h = float(pix.height) or 1.0
+            result = self._engine(img)
+
+        boxes = getattr(result, "boxes", None) if result else None
+        txts = getattr(result, "txts", None) if result else None
+        scores = getattr(result, "scores", None) if result else None
+        # boxes/scores are numpy arrays: never test their truth value directly
+        if boxes is None or txts is None:
+            return []
+        if len(boxes) == 0 or len(txts) == 0:
+            return []
+
+        out: list[dict] = []
+        for i, (box, txt) in enumerate(zip(boxes, txts)):
+            if txt is None or not str(txt).strip():
+                continue
+            xs = [float(p[0]) for p in box]
+            ys = [float(p[1]) for p in box]
+            score = None
+            if scores is not None and i < len(scores):
+                score = float(scores[i])
+            out.append({
+                "text": str(txt).strip(),
+                "bbox": [round(min(xs) / w, 4), round(min(ys) / h, 4),
+                         round(max(xs) / w, 4), round(max(ys) / h, 4)],
+                "score": round(score, 3) if score is not None else None,
+            })
+        return out
+
+    # ------------------------------------------------------------------
     def ocr_to_document(self, pdf_path) -> Document:
         """Rebuild a Document from OCR text (one Section per page)."""
         from app.parser import Line, Section

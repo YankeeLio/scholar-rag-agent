@@ -73,6 +73,17 @@
   .tab { border: 1px solid transparent; background: none; padding: 7px 16px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 8px 8px 0 0; }
   .tab.active { background: var(--bg); border-color: var(--line); border-bottom-color: var(--bg); color: var(--ink); font-weight: 600; }
   #graph-panel { display: none; flex: 1; flex-direction: column; min-height: 0; background: var(--panel); }
+  .sbtn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 12px;
+          font-size: 12px; color: var(--ink); cursor: pointer; }
+  .sbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .sbtn:disabled { opacity: .45; cursor: not-allowed; }
+  #read-overlay .ln { position: absolute; cursor: pointer; border-radius: 2px;
+                      background: transparent; transition: background .12s; }
+  #read-overlay .ln:hover { background: rgba(31, 90, 255, .13); }
+  #read-overlay .ln.sel { background: rgba(31, 90, 255, .28); box-shadow: inset 0 0 0 1px rgba(31,90,255,.55); }
+  .tr-item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: #fff; }
+  .tr-item .src { font-size: 12px; color: var(--muted); margin-bottom: 5px; line-height: 1.6; }
+  .tr-item .dst { font-size: 13px; line-height: 1.75; }
   @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { display: none; } }
 </style>
 </head>
@@ -101,6 +112,7 @@
     <div class="tabbar">
       <button class="tab active" id="tab-qa" onclick="switchTab('qa')">💬 溯源问答</button>
       <button class="tab" id="tab-agent" onclick="switchTab('agent')">🤖 Agent</button>
+      <button class="tab" id="tab-read" onclick="switchTab('read')">📖 联动阅读</button>
       <button class="tab" id="tab-graph" onclick="switchTab('graph')">🕸️ 引用图谱</button>
     </div>
     <div class="chat-head">💬 溯源问答（回答带引用锚点，点击可查看原文证据）</div>
@@ -131,6 +143,33 @@
       <div class="input-row">
         <input id="agent-question" placeholder="让 Agent 自主规划任务…（回车发送）">
         <button id="agent-btn">发送</button>
+      </div>
+    </div>
+    <div id="read-panel" style="display:none;flex:1;flex-direction:column;min-height:0;background:var(--panel)">
+      <div class="chat-head">📖 联动阅读（左侧版面原图 ↔ 右侧译文，点击原文行即可查看对应译文）</div>
+      <div style="display:flex;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap">
+        <select id="read-doc" style="max-width:280px;padding:5px 8px;font-size:13px"></select>
+        <button id="read-prev" class="sbtn">◀ 上一页</button>
+        <span id="read-pageno" style="font-size:13px;color:var(--muted)">1 / -</span>
+        <button id="read-next" class="sbtn">下一页 ▶</button>
+        <span style="flex:1"></span>
+        <select id="read-lang" style="padding:5px 8px;font-size:13px">
+          <option value="zh">译为中文</option>
+          <option value="en">译为英文</option>
+        </select>
+        <button id="read-all" class="sbtn">整页翻译</button>
+      </div>
+      <div style="flex:1;display:flex;min-height:0">
+        <div id="read-left" style="flex:1;overflow:auto;padding:12px;border-right:1px solid var(--line);background:#eef1f5">
+          <div id="read-page-wrap" style="position:relative;display:inline-block;max-width:100%">
+            <img id="read-page-img" style="display:block;max-width:100%;box-shadow:0 1px 6px rgba(0,0,0,.12)" alt="">
+            <div id="read-overlay" style="position:absolute;inset:0"></div>
+          </div>
+        </div>
+        <div id="read-right" style="width:46%;overflow-y:auto;padding:14px 20px;font-size:13px;line-height:1.8">
+          <div class="thinking" id="read-hint">选择顶部的文献，点击左侧页面上任意一行，右侧显示该行译文。</div>
+          <div id="read-tr-list"></div>
+        </div>
       </div>
     </div>
     <div id="graph-panel">
@@ -317,19 +356,196 @@ $("#question").addEventListener("keydown", (e) => { if (e.key === "Enter") ask()
 
 /* ---------- citation graph tab ---------- */
 function switchTab(name) {
-  ["qa", "agent", "graph"].forEach(t => {
+  ["qa", "agent", "read", "graph"].forEach(t => {
     $("#tab-" + t).className = "tab " + (t === name ? "active" : "");
   });
   // qa panel pieces
   const qaPieces = document.querySelectorAll("section > .chat-head, section > #chat, section > .suggest, section > #ev-panel, section > .input-row");
   qaPieces.forEach(el => el.style.display = (name === "qa") ? "" : "none");
-  // agent panel
+  // side panels
   $("#agent-panel").style.display = (name === "agent") ? "flex" : "none";
-  // graph panel
-  const gp = $("#graph-panel");
-  gp.style.display = (name === "graph") ? "flex" : "none";
+  $("#read-panel").style.display = (name === "read") ? "flex" : "none";
+  $("#graph-panel").style.display = (name === "graph") ? "flex" : "none";
   if (name === "graph") loadGraph();
+  if (name === "read") loadReadDocs();
 }
+
+/* ---------- linked reading tab ---------- */
+const readState = { docId: null, title: "", page: 1, pageCount: 1, lines: [], busy: false };
+
+async function loadReadDocs() {
+  const sel = $("#read-doc");
+  if (sel.dataset.loaded === "1") { if (sel.value && !readState.docId) openReadDoc(sel.value); return; }
+  try {
+    const r = await (await fetch(API + "/api/documents")).json();
+    sel.innerHTML = "";
+    (r.documents || []).forEach(d => {
+      const o = document.createElement("option");
+      o.value = d.doc_id;
+      o.textContent = `${d.title}（${d.chunks} 块）`;
+      sel.appendChild(o);
+    });
+    sel.dataset.loaded = "1";
+    if (sel.value) openReadDoc(sel.value);
+  } catch (e) {
+    $("#read-hint").textContent = "文献列表加载失败：" + e.message;
+  }
+}
+
+async function openReadDoc(docId) {
+  const sel = $("#read-doc");
+  readState.docId = docId;
+  const opt = Array.from(sel.options).find(o => o.value === docId);
+  readState.title = opt ? opt.textContent.replace(/（.*）$/, "") : "";
+  $("#read-tr-list").innerHTML = "";
+  $("#read-hint").textContent = "点击左侧页面上任意一行，右侧显示该行译文。";
+  await loadReadPage(1);
+}
+
+async function loadReadPage(n) {
+  if (!readState.docId || readState.busy) return;
+  if (n < 1) n = 1;
+  if (readState.pageCount && n > readState.pageCount) n = readState.pageCount;
+  readState.busy = true;
+  $("#read-hint").textContent = "正在加载页面…（扫描件需先 OCR，约 1-3 秒）";
+  try {
+    const res = await fetch(`${API}/api/documents/${readState.docId}/page/${n}/layout`);
+    if (!res.ok) {
+      $("#read-hint").textContent = "该页无法读取文本层（可能是扫描件，请用 OCR 通道入库的版本）";
+      $("#read-overlay").innerHTML = "";
+      readState.busy = false;
+      return;
+    }
+    const layout = await res.json();
+    readState.page = layout.page;
+    readState.pageCount = layout.page_count;
+    readState.lines = layout.lines || [];
+    $("#read-pageno").textContent = `${layout.page} / ${layout.page_count}`;
+    $("#read-page-img").src = `${API}/api/documents/${readState.docId}/page/${layout.page}/image?dpi=150`;
+    renderReadOverlay();
+    $("#read-hint").textContent = `本页${layout.ocr ? "OCR 识别" : "文本层"} ${readState.lines.length} 行（${layout.width}×${layout.height} pt）。点击任意行查看译文。`;
+  } catch (e) {
+    $("#read-hint").textContent = "页面加载失败：" + e.message;
+  } finally {
+    readState.busy = false;
+  }
+}
+
+function renderReadOverlay() {
+  const ov = $("#read-overlay");
+  ov.innerHTML = "";
+  readState.lines.forEach((ln, i) => {
+    const b = ln.bbox || [0, 0, 0, 0];
+    const d = document.createElement("div");
+    d.className = "ln";
+    d.dataset.idx = i;
+    d.style.left = (b[0] * 100) + "%";
+    d.style.top = (b[1] * 100) + "%";
+    d.style.width = Math.max((b[2] - b[0]) * 100, 0.5) + "%";
+    d.style.height = Math.max((b[3] - b[1]) * 100, 0.5) + "%";
+    d.title = ln.text;
+    d.onclick = () => translateLine(i, d);
+    ov.appendChild(d);
+  });
+}
+
+async function translateLine(i, el) {
+  if (readState.busy) return;
+  const text = readState.lines[i] ? readState.lines[i].text : "";
+  if (!text) return;
+  document.querySelectorAll("#read-overlay .ln").forEach(n => n.classList.remove("sel"));
+  el.classList.add("sel");
+  readState.busy = true;
+  const card = document.createElement("div");
+  card.className = "tr-item";
+  card.innerHTML = `<div class="src">第 ${readState.page} 页 · 第 ${i + 1} 行</div>
+    <div class="src" style="color:#39445a">${esc(text)}</div>
+    <div class="dst thinking">翻译中…</div>`;
+  $("#read-tr-list").prepend(card);
+  try {
+    const r = await fetch(API + "/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, target_lang: $("#read-lang").value, context: readState.title }),
+    });
+    const raw = await r.text();
+    let j = {};
+    try { j = JSON.parse(raw); } catch (e) { j = { detail: raw }; }
+    const dst = card.querySelector(".dst");
+    dst.className = "dst";
+    if (r.ok) {
+      dst.textContent = j.translation || "（无译文）";
+    } else {
+      dst.textContent = "翻译失败：" + (j.detail || r.status);
+      dst.style.color = "var(--err)";
+    }
+  } catch (e) {
+    card.querySelector(".dst").textContent = "翻译失败：" + e.message;
+  } finally {
+    readState.busy = false;
+  }
+}
+
+async function translatePage() {
+  if (readState.busy || !readState.lines.length) return;
+  readState.busy = true;
+  $("#read-all").disabled = true;
+  const lang = $("#read-lang").value;
+  const box = $("#read-tr-list");
+  box.innerHTML = "";
+  const head = document.createElement("div");
+  head.className = "tr-item";
+  head.innerHTML = `<div class="dst"><b>第 ${readState.page} 页 · 整页译文</b></div>`;
+  box.appendChild(head);
+
+  // group lines into <=1800-char batches to respect the API limit
+  const batches = [];
+  let cur = [], curLen = 0;
+  readState.lines.forEach(ln => {
+    if (curLen + ln.text.length > 1800 && cur.length) { batches.push(cur); cur = []; curLen = 0; }
+    cur.push(ln.text); curLen += ln.text.length;
+  });
+  if (cur.length) batches.push(cur);
+
+  const status = document.createElement("div");
+  status.className = "tr-item thinking";
+  status.textContent = `共 ${batches.length} 段，正在翻译…`;
+  box.appendChild(status);
+
+  for (let k = 0; k < batches.length; k++) {
+    status.textContent = `正在翻译第 ${k + 1}/${batches.length} 段…`;
+    try {
+      const r = await fetch(API + "/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: batches[k].join("\n"), target_lang: lang, context: readState.title }),
+      });
+      const raw = await r.text();
+      let j = {};
+      try { j = JSON.parse(raw); } catch (e) { j = { detail: raw }; }
+      const item = document.createElement("div");
+      item.className = "tr-item";
+      item.innerHTML = r.ok
+        ? `<div class="dst">${esc(j.translation || "")}</div>`
+        : `<div class="dst" style="color:var(--err)">翻译失败：${esc(j.detail || String(r.status))}</div>`;
+      box.appendChild(item);
+    } catch (e) {
+      const item = document.createElement("div");
+      item.className = "tr-item";
+      item.textContent = "翻译失败：" + e.message;
+      box.appendChild(item);
+    }
+  }
+  status.remove();
+  $("#read-all").disabled = false;
+  readState.busy = false;
+}
+
+$("#read-doc").addEventListener("change", (e) => openReadDoc(e.target.value));
+$("#read-prev").addEventListener("click", () => loadReadPage(readState.page - 1));
+$("#read-next").addEventListener("click", () => loadReadPage(readState.page + 1));
+$("#read-all").addEventListener("click", translatePage);
+
 
 /* ---------- agent mode ---------- */
 async function askAgent() {
