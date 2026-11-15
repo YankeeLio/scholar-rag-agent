@@ -104,7 +104,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-首次启动会自动从 HuggingFace 镜像下载 BGE-M3 模型（约 2.2GB）到 `data/hf_cache`。
+首次启动会自动从 HuggingFace 镜像下载 BGE-M3 模型（约 4.3 GB）到 `data/hf_cache`（可用 `HF_ENDPOINT=https://hf-mirror.com` 加速）。
 
 ### 配置
 

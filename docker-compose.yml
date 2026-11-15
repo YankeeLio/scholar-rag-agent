@@ -1,0 +1,19 @@
+# ScholarRAG Agent · 一键启动
+#   docker compose up -d --build
+# 前置：将 apps/api/.env 填好 DEEPSEEK_API_KEY（该文件不入仓库）
+services:
+  api:
+    build: .
+    image: scholarrag-agent:latest
+    container_name: scholarrag
+    ports:
+      - "8010:8010"
+    env_file:
+      - apps/api/.env
+    environment:
+      DATA_DIR: /app/data
+      HF_ENDPOINT: https://hf-mirror.com
+    volumes:
+      # 向量索引、上传副本、模型缓存都落在这里，容器重建不丢数据
+      - ./data:/app/data
+    restart: unless-stopped

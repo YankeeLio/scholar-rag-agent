@@ -498,7 +498,7 @@ s += [
          '#   DEEPSEEK_API_KEY=...\n'
          '#   DEEPSEEK_BASE_URL=https://api.deepseek.com\n'
          '#   DEEPSEEK_MODEL=deepseek-chat\n\n'
-         '# 3. 启动（首次会下载 BGE-M3 权重，约 2.2GB）\n'
+         '# 3. 启动（首次会下载 BGE-M3 权重，约 4.3GB）\n'
          'uvicorn app.main:app --host 0.0.0.0 --port 8010\n\n'
          '# 4. 打开\n'
          '#   界面      http://127.0.0.1:8010\n'

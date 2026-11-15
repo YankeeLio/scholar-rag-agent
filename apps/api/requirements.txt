@@ -11,3 +11,7 @@ openai>=1.40
 httpx>=0.27
 rank-bm25>=0.2
 jieba>=0.42
+
+# 扫描件 OCR 通道（可选：缺失时仅扫描件解析不可用）
+rapidocr>=3.10
+onnxruntime>=1.20
