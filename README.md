@@ -4,6 +4,13 @@
 
 > 2026 全国高校 AI 大模型挑战赛（B 组）参赛作品
 
+| | |
+|---|---|
+| **在线演示** | **http://139.199.227.56:8010** |
+| 公开仓库 | https://github.com/YankeeLio/scholar-rag-agent |
+| 技术文档 | `docs/ScholarRAG_技术文档.pdf` |
+| 演示脚本 | `docs/VIDEO_SCRIPT.md` |
+
 ---
 
 ## 项目简介

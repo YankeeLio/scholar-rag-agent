@@ -139,6 +139,8 @@ s += [
     P('提交日期：2026 年 11 月 18 日', 'meta'),
     Spacer(1, 3 * mm),
     P('代码仓库：github.com/YankeeLio/scholar-rag-agent', 'meta'),
+    Spacer(1, 3 * mm),
+    P('在线演示：http://139.199.227.56:8010', 'meta'),
     PageBreak(),
 ]
 
@@ -486,8 +488,12 @@ s += [
     ], widths=[14 * mm, 64 * mm, W - 78 * mm]),
     cap('表 12　HTTP 接口'),
     H1('附录 B　部署与复现步骤'),
+    P('容器化部署：仓库根目录提供 Dockerfile 与 docker-compose.yml，单镜像同时托管 API 与前端，索引与上传件通过卷持久化。'
+      '已在腾讯云轻量应用服务器（4 核 4 GB / Ubuntu 22.04）完成实际部署并开放公网访问，'
+      '地址 http://139.199.227.56:8010 即为该实例；一键部署脚本见 scripts/setup_server.sh，'
+      '完整步骤（含低配机型 swap 兜底、索引迁移、故障排查）见 docs/DEPLOY.md。', 'ni'),
     P('环境：Python 3.13；无 GPU 要求（CPU 即可）。依赖见 apps/api/requirements.txt，主要包含 fastapi、uvicorn、pymupdf、chromadb、'
-      'sentence-transformers 与 torch、rapidocr-onnxruntime、networkx、openai。', 'ni'),
+      'sentence-transformers 与 torch、rapidocr、onnxruntime、networkx、openai。', 'ni'),
     CODE('# 1. 安装依赖\n'
          'cd apps/api\n'
          'python -m venv .venv\n'

@@ -295,9 +295,13 @@ def _doc_source(doc_id: str) -> str:
     if not res["metadatas"]:
         raise HTTPException(404, "document not found in index")
     source = res["metadatas"][0]["source"]
-    if not Path(source).exists():
-        raise HTTPException(404, f"source pdf missing: {source}")
-    return source
+    if Path(source).exists():
+        return source
+    # 索引可能迁移自另一台机器（例如 Windows 绝对路径），按文件名回退到本机副本
+    fallback = UPLOAD_DIR / Path(str(source).replace("\\", "/")).name
+    if fallback.exists():
+        return str(fallback)
+    raise HTTPException(404, f"source pdf missing: {source}")
 
 
 @app.get("/api/documents/{doc_id}/page/{page_no}/image")
