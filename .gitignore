@@ -13,6 +13,9 @@ data/
 
 # 本地调试临时产物
 docs/_tmp_*
+docs/api_*.json
+docs/api_*.txt
+docs/debug_*.json
 
 # Node
 node_modules/
